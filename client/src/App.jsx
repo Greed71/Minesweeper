@@ -8,6 +8,7 @@ function App() {
   const [mines, setMines] = useState(0)
   const [board, setBoard] = useState([])
   const [clicked, setClicked] = useState(false)
+  const [mode, setMode] = useState('')
 
   const handleSubmit = async () => {
     try {
@@ -17,7 +18,6 @@ function App() {
         mines
       })
 
-      // Costruisce una board vuota (null indica cella non ancora scoperta)
       const emptyBoard = Array(row).fill().map(() => Array(col).fill(null))
       setBoard(emptyBoard)
       setClicked(false)
@@ -39,10 +39,31 @@ function App() {
     }
   }
 
+  const handleModeSelect = (selectedMode) => {
+    setMode(selectedMode)
+    if (selectedMode === 'facile') {
+      setColumns(8)
+      setRow(8)
+      setMines(10)
+    } else if (selectedMode === 'medio') {
+      setColumns(16)
+      setRow(16)
+      setMines(40)
+    } else if (selectedMode === 'difficile') {
+      setColumns(30)
+      setRow(16)
+      setMines(99)
+    } else if (selectedMode === 'personalizzato') {
+      setColumns(0)
+      setRow(0)
+      setMines(0)
+    }
+  }
+
   return (
     <>
       <div style={{ position: 'relative', minHeight: '100vh' }}>
-        {/* HEADER fissi in alto */}
+        {/* HEADER pulsanti modalità */}
         <div
           style={{
             position: 'absolute',
@@ -54,38 +75,73 @@ function App() {
             gap: '20px',
             padding: '20px',
             zIndex: 10,
+            flexWrap: 'nowrap'
           }}
         >
-          <label style={{ color: 'white' }}>
-            Colonne:
-            <input
-              type="number"
-              value={col}
-              onChange={(e) => setColumns(Number(e.target.value))}
-              style={{ padding: '5px', width: '80px', marginLeft: '5px' }}
-            />
-          </label>
-
-          <label style={{ color: 'white' }}>
-            Righe:
-            <input
-              type="number"
-              value={row}
-              onChange={(e) => setRow(Number(e.target.value))}
-              style={{ padding: '5px', width: '80px', marginLeft: '5px' }}
-            />
-          </label>
-
-          <label style={{ color: 'white' }}>
-            Mine:
-            <input
-              type="number"
-              value={mines}
-              onChange={(e) => setMines(Number(e.target.value))}
-              style={{ padding: '5px', width: '80px', marginLeft: '5px' }}
-            />
-          </label>
+          {['Facile', 'Medio', 'Difficile', 'Personalizzato'].map((label) => (
+            <button
+              key={label}
+              onClick={() => handleModeSelect(label.toLowerCase())}
+              style={{
+                padding: '10px 20px',
+                backgroundColor: mode === label.toLowerCase() ? '#aaa' : '#fff',
+                border: '1px solid #000',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                color: '#000',
+              }}
+            >
+              {label}
+            </button>
+          ))}
         </div>
+
+        {/* INPUTS personalizzati visibili solo se selezionato "personalizzato" */}
+        {mode === 'personalizzato' && (
+          <div
+            style={{
+              position: 'absolute',
+              top: '80px',
+              left: 0,
+              width: '100%',
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '20px',
+              padding: '10px',
+              zIndex: 9,
+            }}
+          >
+            <label style={{ color: 'white' }}>
+              Colonne:
+              <input
+                type="number"
+                value={col}
+                onChange={(e) => setColumns(Number(e.target.value))}
+                style={{ padding: '5px', width: '80px', marginLeft: '5px' }}
+              />
+            </label>
+
+            <label style={{ color: 'white' }}>
+              Righe:
+              <input
+                type="number"
+                value={row}
+                onChange={(e) => setRow(Number(e.target.value))}
+                style={{ padding: '5px', width: '80px', marginLeft: '5px' }}
+              />
+            </label>
+
+            <label style={{ color: 'white' }}>
+              Mine:
+              <input
+                type="number"
+                value={mines}
+                onChange={(e) => setMines(Number(e.target.value))}
+                style={{ padding: '5px', width: '80px', marginLeft: '5px' }}
+              />
+            </label>
+          </div>
+        )}
 
         {/* Contenuto centrale */}
         <div
@@ -93,7 +149,7 @@ function App() {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            paddingTop: '120px',
+            paddingTop: mode === 'personalizzato' ? '160px' : '120px',
           }}
         >
           <button

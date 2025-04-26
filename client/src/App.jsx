@@ -1,64 +1,70 @@
-import { useState } from 'react'
-import './App.css'
-import axios from 'axios'
+import { useState } from 'react';
+import './App.css';
+import axios from 'axios';
 
 function App() {
-  const [row, setRow] = useState(0)
-  const [col, setColumns] = useState(0)
-  const [mines, setMines] = useState(0)
-  const [board, setBoard] = useState([])
-  const [clicked, setClicked] = useState(false)
-  const [mode, setMode] = useState('')
+  const [row, setRow] = useState(0);
+  const [col, setColumns] = useState(0);
+  const [mines, setMines] = useState(0);
+  const [board, setBoard] = useState([]);
+  const [clicked, setClicked] = useState(false);
+  const [mode, setMode] = useState('');
 
   const handleSubmit = async () => {
     try {
-      await axios.post('http://localhost:8080/genera', {
-        row,
-        col,
-        mines
-      })
-
-      const emptyBoard = Array(row).fill().map(() => Array(col).fill(null))
-      setBoard(emptyBoard)
-      setClicked(false)
+      const response = await axios.post('http://localhost:8080/api/genera', {
+        row: row,
+        col: col,
+        mines: mines
+      });
+      setBoard(response.data); 
+      setClicked(false); // resettiamo la board come nuova
     } catch (error) {
-      console.error(error)
+      console.error(error);
     }
-  }
+  };
 
-  const handleFirstClick = async (rowIndex, colIndex) => {
+  const handleCellClick = async (rowIndex, colIndex) => {
     try {
-      const response = await axios.post('http://localhost:8080/clic', {
-        row: rowIndex,
-        col: colIndex
-      })
-      setBoard(response.data)
-      setClicked(true)
+      if (!clicked) {
+        const response = await axios.post('http://localhost:8080/api/clic', {
+          row: rowIndex,
+          col: colIndex
+        });
+        setClicked(true);
+        setBoard(response.data);
+      } else {
+        const response = await axios.post('http://localhost:8080/api/reveal', {
+          row: rowIndex,
+          col: colIndex
+        });
+        setBoard(response.data);
+      }
     } catch (error) {
-      console.error('Errore nel primo click:', error)
+      console.error('Errore nel click:', error);
     }
-  }
+  };
 
   const handleModeSelect = (selectedMode) => {
-    setMode(selectedMode)
+    setMode(selectedMode);
     if (selectedMode === 'facile') {
-      setColumns(8)
-      setRow(8)
-      setMines(10)
+      setColumns(8);
+      setRow(8);
+      setMines(10);
     } else if (selectedMode === 'medio') {
-      setColumns(16)
-      setRow(16)
-      setMines(40)
+      setColumns(16);
+      setRow(16);
+      setMines(40);
     } else if (selectedMode === 'difficile') {
-      setColumns(30)
-      setRow(16)
-      setMines(99)
+      setColumns(30);
+      setRow(16);
+      setMines(99);
     } else if (selectedMode === 'personalizzato') {
-      setColumns(0)
-      setRow(0)
-      setMines(0)
+      setColumns(0);
+      setRow(0);
+      setMines(0);
     }
-  }
+  };
 
   return (
     <>
@@ -75,7 +81,7 @@ function App() {
             gap: '20px',
             padding: '20px',
             zIndex: 10,
-            flexWrap: 'nowrap'
+            flexWrap: 'nowrap',
           }}
         >
           {['Facile', 'Medio', 'Difficile', 'Personalizzato'].map((label) => (
@@ -96,7 +102,7 @@ function App() {
           ))}
         </div>
 
-        {/* INPUTS personalizzati visibili solo se selezionato "personalizzato" */}
+        {/* INPUTS per personalizzato */}
         {mode === 'personalizzato' && (
           <div
             style={{
@@ -143,7 +149,7 @@ function App() {
           </div>
         )}
 
-        {/* Contenuto centrale */}
+        {/* CONTENUTO */}
         <div
           style={{
             display: 'flex',
@@ -168,7 +174,7 @@ function App() {
             Genera
           </button>
 
-          {/* Griglia cliccabile */}
+          {/* GRIGLIA */}
           {board.length > 0 && (
             <div style={{ display: 'flex', justifyContent: 'center', marginTop: '30px' }}>
               <table style={{ borderCollapse: 'collapse' }}>
@@ -184,9 +190,9 @@ function App() {
                             height: '30px',
                           }}
                         >
-                          {!clicked ? (
+                          {cell === null ? (
                             <button
-                              onClick={() => handleFirstClick(rowIndex, colIndex)}
+                              onClick={() => handleCellClick(rowIndex, colIndex)}
                               style={{
                                 width: '100%',
                                 height: '100%',
@@ -201,16 +207,7 @@ function App() {
                                 textAlign: 'center',
                                 lineHeight: '30px',
                                 backgroundColor: '#eee',
-                                color:
-                                  cell === 1 ? 'blue' :
-                                  cell === 2 ? 'green' :
-                                  cell === 3 ? 'red' :
-                                  cell === 4 ? 'darkblue' :
-                                  cell === 5 ? 'darkred' :
-                                  cell === 6 ? 'turquoise' :
-                                  cell === 7 ? 'black' :
-                                  cell === 8 ? 'gray' :
-                                  '#000',
+                                color: getColor(cell),
                               }}
                             >
                               {cell === -1 ? '💣' : cell === 0 ? '' : cell}
@@ -227,7 +224,21 @@ function App() {
         </div>
       </div>
     </>
-  )
+  );
 }
 
-export default App
+function getColor(number) {
+  switch (number) {
+    case 1: return 'blue';
+    case 2: return 'green';
+    case 3: return 'red';
+    case 4: return 'darkblue';
+    case 5: return 'darkred';
+    case 6: return 'turquoise';
+    case 7: return 'black';
+    case 8: return 'gray';
+    default: return 'black';
+  }
+}
+
+export default App;

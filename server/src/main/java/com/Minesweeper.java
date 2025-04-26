@@ -1,19 +1,20 @@
 package com;
 
 import java.util.Random;
+import org.springframework.stereotype.Service;
 
+@Service
 public class Minesweeper {
 
-    private final int rows;
-    private final int cols;
-    private final int[][] board;
-    private final boolean[][] revealed;
-    private final boolean[][] flagged;
-    private final int mineCount;
-    private final boolean isFull;
+    private int rows;
+    private int cols;
+    private int mineCount;
+    private int[][] board;
+    private boolean[][] revealed;
+    private boolean[][] flagged;
+    private boolean minesPlaced = false;
 
-    public Minesweeper(int rows, int cols, int mineCount, boolean isFull) {
-        this.isFull = isFull;
+    public void startNewGame(int rows, int cols, int mineCount) {
         this.rows = rows;
         this.cols = cols;
         this.mineCount = mineCount;
@@ -21,14 +22,23 @@ public class Minesweeper {
         this.revealed = new boolean[rows][cols];
         this.flagged = new boolean[rows][cols];
         initializeBoard();
-
-        if (isFull) {
-            placeMines(-1, -1); // Nessuna sicurezza
-            calculateNumbers();
-        }
+        placeMines(-1, -1); // senza protezione
+        calculateNumbers();
+        minesPlaced = true;
     }
 
-    protected void initializeBoard() {
+    public void prepareEmptyBoard(int rows, int cols, int mineCount) {
+        this.rows = rows;
+        this.cols = cols;
+        this.mineCount = mineCount;
+        this.board = new int[rows][cols];
+        this.revealed = new boolean[rows][cols];
+        this.flagged = new boolean[rows][cols];
+        initializeBoard();
+        minesPlaced = false;
+    }
+
+    private void initializeBoard() {
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
                 board[row][col] = 0;
@@ -40,6 +50,15 @@ public class Minesweeper {
 
     public void revealCell(int row, int col) {
         if (!isInBounds(row, col) || revealed[row][col]) return;
+    
+        if (!minesPlaced) {
+            do {
+                initializeBoard();
+                placeMines(row, col);
+                calculateNumbers();
+            } while (board[row][col] != 0);
+            minesPlaced = true;
+        }
     
         revealed[row][col] = true;
     
@@ -53,6 +72,7 @@ public class Minesweeper {
             }
         }
     }
+    
 
     public Integer[][] getVisibleBoard() {
         Integer[][] visible = new Integer[rows][cols];
@@ -61,14 +81,14 @@ public class Minesweeper {
                 if (revealed[row][col]) {
                     visible[row][col] = board[row][col];
                 } else {
-                    visible[row][col] = null; // cella coperta
+                    visible[row][col] = null;
                 }
             }
         }
         return visible;
     }
 
-    public void placeMines(int safeRow, int safeCol) {
+    private void placeMines(int safeRow, int safeCol) {
         Random rand = new Random();
         int placedMines = 0;
         while (placedMines < mineCount) {
@@ -82,10 +102,9 @@ public class Minesweeper {
             board[row][col] = -1;
             placedMines++;
         }
-        calculateNumbers();
     }
 
-    public void calculateNumbers() {
+    private void calculateNumbers() {
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
                 if (board[row][col] == -1) continue;
@@ -104,9 +123,5 @@ public class Minesweeper {
 
     private boolean isInBounds(int row, int col) {
         return row >= 0 && row < rows && col >= 0 && col < cols;
-    }
-
-    public int[][] getBoard() {
-        return board;
     }
 }

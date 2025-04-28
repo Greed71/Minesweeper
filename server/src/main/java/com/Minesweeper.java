@@ -13,6 +13,8 @@ public class Minesweeper {
     private boolean[][] revealed;
     private boolean[][] flagged;
     private boolean minesPlaced = false;
+    private boolean gameOver = false;
+    private boolean gameWon = false;
 
     public void startNewGame(int rows, int cols, int mineCount) {
         this.rows = rows;
@@ -36,6 +38,8 @@ public class Minesweeper {
         this.flagged = new boolean[rows][cols];
         initializeBoard();
         minesPlaced = false;
+        gameOver = false;
+        gameWon = false; // Resetta lo stato di vittoria
     }
 
     private void initializeBoard() {
@@ -49,8 +53,9 @@ public class Minesweeper {
     }
 
     public void revealCell(int row, int col) {
-        if (!isInBounds(row, col) || revealed[row][col]) return;
-    
+        if (!isInBounds(row, col) || revealed[row][col] || gameOver)
+            return;
+
         if (!minesPlaced) {
             do {
                 initializeBoard();
@@ -59,9 +64,17 @@ public class Minesweeper {
             } while (board[row][col] != 0);
             minesPlaced = true;
         }
-    
+
         revealed[row][col] = true;
-    
+
+        // Se cliccata una mina, il gioco è finito
+        if (board[row][col] == -1) {
+            gameOver = true;
+            System.out.println("Game Over! Hai colpito una mina.");
+            return;
+        }
+
+        // Se la cella è vuota, scopri le celle limitrofe
         if (board[row][col] == 0) {
             for (int r = -1; r <= 1; r++) {
                 for (int c = -1; c <= 1; c++) {
@@ -71,8 +84,13 @@ public class Minesweeper {
                 }
             }
         }
+
+        // Controlla se il gioco è vinto
+        if (checkWin()) {
+            gameWon = true; // Impostiamo il gioco come finito
+            System.out.println("Congratulazioni! Hai vinto!");
+        }
     }
-    
 
     public Integer[][] getVisibleBoard() {
         Integer[][] visible = new Integer[rows][cols];
@@ -107,7 +125,8 @@ public class Minesweeper {
     private void calculateNumbers() {
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
-                if (board[row][col] == -1) continue;
+                if (board[row][col] == -1)
+                    continue;
                 int count = 0;
                 for (int r = -1; r <= 1; r++) {
                     for (int c = -1; c <= 1; c++) {
@@ -123,5 +142,24 @@ public class Minesweeper {
 
     private boolean isInBounds(int row, int col) {
         return row >= 0 && row < rows && col >= 0 && col < cols;
+    }
+
+    public boolean isGameOver() {
+        return gameOver;
+    }
+
+    public boolean isGameWon() {
+        return gameWon;
+    }
+
+    public boolean checkWin() {
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                if (board[row][col] != -1 && !revealed[row][col]) {
+                    return false; // Se trovi una cella non rivelata che non è una mina, il gioco non è vinto
+                }
+            }
+        }
+        return true; // Tutte le celle non contenenti mine sono state rivelate, quindi il gioco è vinto
     }
 }

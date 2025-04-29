@@ -16,6 +16,7 @@ public class Minesweeper {
     private boolean gameOver = false;
     private boolean gameWon = false;
 
+    // Inizia una nuova partita
     public void startNewGame(int rows, int cols, int mineCount) {
         this.rows = rows;
         this.cols = cols;
@@ -24,11 +25,12 @@ public class Minesweeper {
         this.revealed = new boolean[rows][cols];
         this.flagged = new boolean[rows][cols];
         initializeBoard();
-        placeMines(-1, -1); // senza protezione
+        placeMines(-1, -1); // Posiziona le mine senza protezione iniziale
         calculateNumbers();
         minesPlaced = true;
     }
 
+    // Prepara una griglia vuota senza mine
     public void prepareEmptyBoard(int rows, int cols, int mineCount) {
         this.rows = rows;
         this.cols = cols;
@@ -39,9 +41,10 @@ public class Minesweeper {
         initializeBoard();
         minesPlaced = false;
         gameOver = false;
-        gameWon = false; // Resetta lo stato di vittoria
+        gameWon = false; // Resetta stato di vittoria
     }
 
+    // Inizializza la griglia (tutti i valori a 0)
     private void initializeBoard() {
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
@@ -52,10 +55,12 @@ public class Minesweeper {
         }
     }
 
+    // Rivelazione di una cella
     public void revealCell(int row, int col) {
-        if (!isInBounds(row, col) || revealed[row][col] || gameOver || flagged[row][col] == true) 
+        if (!isInBounds(row, col) || revealed[row][col] || gameOver || flagged[row][col]) 
             return;
 
+        // Posiziona le mine se non sono ancora state posizionate
         if (!minesPlaced) {
             do {
                 initializeBoard();
@@ -67,7 +72,7 @@ public class Minesweeper {
 
         revealed[row][col] = true;
 
-        // Se cliccata una mina, il gioco è finito
+        // Se cliccata una mina, il gioco finisce
         if (board[row][col] == -1) {
             gameOver = true;
             System.out.println("Game Over! Hai colpito una mina.");
@@ -85,27 +90,25 @@ public class Minesweeper {
             }
         }
 
-        // Controlla se il gioco è vinto
+        // Verifica se il gioco è stato vinto
         if (checkWin()) {
-            gameWon = true; // Impostiamo il gioco come finito
+            gameWon = true;
             System.out.println("Congratulazioni! Hai vinto!");
         }
     }
 
+    // Restituisce la griglia visibile (le celle rivelate)
     public Integer[][] getVisibleBoard() {
         Integer[][] visible = new Integer[rows][cols];
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
-                if (revealed[row][col]) {
-                    visible[row][col] = board[row][col];
-                } else {
-                    visible[row][col] = null;
-                }
+                visible[row][col] = revealed[row][col] ? board[row][col] : null;
             }
         }
         return visible;
     }
 
+    // Posiziona le mine sulla griglia, evitando la cella iniziale
     private void placeMines(int safeRow, int safeCol) {
         Random rand = new Random();
         int placedMines = 0;
@@ -117,16 +120,16 @@ public class Minesweeper {
                 continue;
             }
 
-            board[row][col] = -1;
+            board[row][col] = -1; // Posiziona una mina
             placedMines++;
         }
     }
 
+    // Calcola i numeri delle celle in base al numero di mine adiacenti
     private void calculateNumbers() {
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
-                if (board[row][col] == -1)
-                    continue;
+                if (board[row][col] == -1) continue;
                 int count = 0;
                 for (int r = -1; r <= 1; r++) {
                     for (int c = -1; c <= 1; c++) {
@@ -140,32 +143,37 @@ public class Minesweeper {
         }
     }
 
+    // Verifica se una cella è all'interno dei limiti della griglia
     private boolean isInBounds(int row, int col) {
         return row >= 0 && row < rows && col >= 0 && col < cols;
     }
 
+    // Verifica se il gioco è finito
     public boolean isGameOver() {
         return gameOver;
     }
 
+    // Verifica se il gioco è stato vinto
     public boolean isGameWon() {
         return gameWon;
     }
 
+    // Aggiungi o rimuovi una bandiera su una cella
     public void flagCell(int row, int col) {
         if (isInBounds(row, col) && !revealed[row][col]) {
-            flagged[row][col] = !flagged[row][col];  // Toggle the flag
+            flagged[row][col] = !flagged[row][col];  // Toglia o aggiungi la bandiera
         }
     }
 
+    // Controlla se il gioco è vinto (tutte le celle senza mine rivelate)
     public boolean checkWin() {
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
                 if (board[row][col] != -1 && !revealed[row][col]) {
-                    return false; // Se trovi una cella non rivelata che non è una mina, il gioco non è vinto
+                    return false; // Se una cella non è rivelata e non è una mina, il gioco non è vinto
                 }
             }
         }
-        return true; // Tutte le celle non contenenti mine sono state rivelate, quindi il gioco è vinto
+        return true; // Tutte le celle senza mine sono rivelate, gioco vinto
     }
 }

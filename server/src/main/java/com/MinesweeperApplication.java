@@ -17,5 +17,4 @@ public class MinesweeperApplication {
 	public String hello() {
 		return "Hello, World!";
 	}
-
 }

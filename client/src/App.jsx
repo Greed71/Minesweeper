@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import "./App.css";
 import axios from "axios";
 
@@ -12,7 +12,7 @@ function App() {
   const [gameOver, setGameOver] = useState(false);
   const [gameWon, setGameWon] = useState(false);
   const [timer, setTimer] = useState(0);
-  const [intervalId, setIntervalId] = useState(null);
+  const intervalId = useRef(0);
   const [message, setMessage] = useState("");
   const [finalTime, setFinalTime] = useState(null);
   const [buttonText, setButtonText] = useState([]);
@@ -41,26 +41,33 @@ function App() {
       );
       setBoard(response.data.board);
       setGameOver(false);
+      setGameWon(false);
       setTimer(0);
+      stopTimer(intervalId.current); // Ferma il timer
+      intervalId.current = 0; // Resetta l'ID del timer
       setMessage(response.data.message);
     } catch (error) {
       console.error(error);
     }
   };
 
-  const startTimer = () => {
-    if (intervalId) {
-      clearInterval(intervalId); // Ferma il timer precedente se esiste
-    }
+  function startTimer() {
+    if (intervalId.current) return; // Non avviare un altro timer se è già in corso
     const id = setInterval(() => {
       setTimer((prevTime) => prevTime + 1);
     }, 1000);
-    setIntervalId(id); // Memorizza il nuovo intervalId
+    console.log(id);
+    intervalId.current = id; // Memorizza l'ID del timer
   };
 
-  const stopTimer = () => {
-    clearInterval(intervalId);
-    setFinalTime(timer);
+  function stopTimer(id) {
+    console.log(id);
+    if (intervalId.current) {
+      console.log("Timer fermato:", id);
+      clearInterval(id); // Ferma il timer
+      setFinalTime(timer); // Salva il tempo finale
+      intervalId.current = null; // Resetta l'ID del timer
+    }
   };
 
   const handleModeSelect = (selectedMode) => {
@@ -77,16 +84,17 @@ function App() {
       setColumns(30);
       setRow(16);
       setMines(99);
-    } else if (selectedMode === "personalizzato") {
-      setColumns(0);
-      setRow(0);
-      setMines(0);
     }
   };
 
   const handleCellClick = async (rowIndex, colIndex) => {
     try {
-      startTimer();
+      // Non fare nulla se il gioco è finito
+      if (gameOver || gameWon) return;
+  
+      // Avvia il timer solo se non è già avviato
+      if (!intervalId.current) startTimer();
+  
       let response;
       if (!clicked) {
         response = await axios.post("http://localhost:8080/api/clic", {
@@ -100,18 +108,21 @@ function App() {
           col: colIndex,
         });
       }
-
+  
       setBoard(response.data.board);
       setMessage(response.data.message);
-
+  
+      // Se il gioco è finito, ferma il timer
       if (response.data.gameOver) {
         setGameOver(true);
-        stopTimer();
+        stopTimer(intervalId.current); // Ferma il timer
       }
-
+  
+      // Se il gioco è vinto, ferma il timer
       if (response.data.gameWon) {
         setGameWon(true);
-        stopTimer();
+        console.log("Gioco vintoo");
+        stopTimer(intervalId.current); // Ferma il timer
       }
     } catch (error) {
       console.error("Errore nel click:", error);
@@ -119,10 +130,16 @@ function App() {
   };
 
   const handleCellRightClick = (rowIndex, colIndex, event) => {
-    event.preventDefault();
+    event.preventDefault(); // Evita il comportamento predefinito del menu contestuale
     const newButtonText = [...buttonText];
-    newButtonText[rowIndex][colIndex] = "🏴";
-    setButtonText(newButtonText);
+    if (gameOver || gameWon) return; // Non fare nulla se il gioco è finito
+    // Se la cella ha già una bandiera, la rimuoviamo
+    if (newButtonText[rowIndex][colIndex] === "🏴") {
+      newButtonText[rowIndex][colIndex] = ""; // Rimuove la bandiera
+    } else {
+      newButtonText[rowIndex][colIndex] = "🏴"; // Piazzala se non c'è già
+    }
+    setButtonText(newButtonText); // Aggiorna lo stato con il nuovo testo
   };
 
   return (
@@ -143,7 +160,7 @@ function App() {
             flexWrap: "nowrap",
           }}
         >
-          {["Facile", "Medio", "Difficile", "Personalizzato"].map((label) => (
+          {["Facile", "Medio", "Difficile"].map((label) => (
             <button
               key={label}
               onClick={() => handleModeSelect(label.toLowerCase())}
@@ -161,60 +178,13 @@ function App() {
           ))}
         </div>
 
-        {/* INPUTS per personalizzato */}
-        {mode === "personalizzato" && (
-          <div
-            style={{
-              position: "absolute",
-              top: "80px",
-              left: 0,
-              width: "100%",
-              display: "flex",
-              justifyContent: "center",
-              gap: "20px",
-              padding: "10px",
-              zIndex: 9,
-            }}
-          >
-            <label style={{ color: "white" }}>
-              Colonne:
-              <input
-                type="number"
-                value={col}
-                onChange={(e) => setColumns(Number(e.target.value))}
-                style={{ padding: "5px", width: "80px", marginLeft: "5px" }}
-              />
-            </label>
-
-            <label style={{ color: "white" }}>
-              Righe:
-              <input
-                type="number"
-                value={row}
-                onChange={(e) => setRow(Number(e.target.value))}
-                style={{ padding: "5px", width: "80px", marginLeft: "5px" }}
-              />
-            </label>
-
-            <label style={{ color: "white" }}>
-              Mine:
-              <input
-                type="number"
-                value={mines}
-                onChange={(e) => setMines(Number(e.target.value))}
-                style={{ padding: "5px", width: "80px", marginLeft: "5px" }}
-              />
-            </label>
-          </div>
-        )}
-
         {/* CONTENUTO */}
         <div
           style={{
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            paddingTop: mode === "personalizzato" ? "160px" : "120px",
+            paddingTop: "120px",
           }}
         >
           <button
@@ -274,10 +244,9 @@ function App() {
                                   buttonText[rowIndex]?.[colIndex] === "🏴"
                                     ? "10px"
                                     : "initial",
+                                cursor: "pointer", // Mantieni il cursore come puntatore
                               }}
-                              disabled={
-                                gameOver || buttonText[rowIndex]?.[colIndex]
-                              }
+                              disabled={gameOver || gameWon || buttonText[rowIndex]?.[colIndex]} // Disabilita il bottone se il gioco è finito o se è bandierato
                             >
                               {buttonText[rowIndex]?.[colIndex]}
                             </button>

@@ -31,25 +31,25 @@ public class Controller {
     }
 
     @PostMapping("/clic")
-    @CrossOrigin(origins = "http://localhost:5173")
-    public Map<String, Object> firstClick(@RequestBody ClickPosition click) {
-        minesweeper.revealCell(click.getRow(), click.getCol());
+@CrossOrigin(origins = "http://localhost:5173")
+public Map<String, Object> firstClick(@RequestBody ClickPosition click) {
+    minesweeper.revealCell(click.getRow(), click.getCol());
 
-        // Se il gioco è finito, lo segnaliamo
-        boolean gameWon = minesweeper.isGameWon();
+    // Se il gioco è finito, lo segnaliamo
+    boolean gameWon = minesweeper.isGameWon();
 
-        // Rispondiamo con la board aggiornata, gameOver e il messaggio
-        Map<String, Object> response = new HashMap<>();
-        response.put("board", minesweeper.getVisibleBoard());
-        response.put("gameWon", gameWon);
+    // Rispondiamo con la board aggiornata, gameOver e il messaggio
+    Map<String, Object> response = new HashMap<>();
+    response.put("board", minesweeper.getVisibleBoard());
+    response.put("gameWon", gameWon);
 
-        // Se il gioco è finito, inviamo il messaggio di game over o vittoria
-        if (gameWon) {
-            response.put("message", "Congratulazioni! Hai vinto!");
-        }
-
-        return response;
+    // Se il gioco è vinto, inviamo il messaggio di vittoria
+    if (gameWon) {
+        response.put("message", "Congratulazioni! Hai vinto!");
     }
+
+    return response;
+}
 
     @PostMapping("/reveal")
     @CrossOrigin(origins = "http://localhost:5173")

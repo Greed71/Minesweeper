@@ -40,3 +40,10 @@
 .read-the-docs {
   color: #888;
 }
+
+button:disabled {
+  background-color: #ccc; /* Imposta il colore di sfondo quando è disabilitato */
+  color: #000; /* Colore del testo quando è disabilitato */
+  cursor: not-allowed; /* Cambia il cursore quando è disabilitato */
+  opacity: 1; /* Rimuove l'effetto di opacità grigio di default */
+}

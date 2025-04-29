@@ -9,12 +9,23 @@ function App() {
   const [board, setBoard] = useState([]);
   const [clicked, setClicked] = useState(false);
   const [mode, setMode] = useState("");
-  const [gameOver, setGameOver] = useState(false); // Stato del gioco
-  const [gameWon, setGameWon] = useState(false); // Stato del gioco
-  const [timer, setTimer] = useState(0); // Timer in secondi
-  const [intervalId, setIntervalId] = useState(null); // ID dell'intervallo per fermare il timer
-  const [message, setMessage] = useState(""); // Messaggio da visualizzare
-  const [finalTime, setFinalTime] = useState(null); // Stato per il tempo finale
+  const [gameOver, setGameOver] = useState(false);
+  const [gameWon, setGameWon] = useState(false);
+  const [timer, setTimer] = useState(0);
+  const [intervalId, setIntervalId] = useState(null);
+  const [message, setMessage] = useState("");
+  const [finalTime, setFinalTime] = useState(null);
+  const [buttonText, setButtonText] = useState([]);
+
+  useEffect(() => {
+    if (row > 0 && col > 0) {
+      setButtonText(
+        Array(row)
+          .fill()
+          .map(() => Array(col).fill(""))
+      );
+    }
+  }, [row, col]);
 
   const handleSubmit = async () => {
     try {
@@ -23,26 +34,33 @@ function App() {
         col: col,
         mines: mines,
       });
+      setButtonText(
+        Array(row)
+          .fill()
+          .map(() => Array(col).fill("")) // Riempie l'array con stringhe vuote
+      );
       setBoard(response.data.board);
-      setGameOver(false); // Riavvia il gioco
-      setTimer(0); // Resetta il timer
-      startTimer(); // Avvia il timer
-      setMessage(response.data.message); // Imposta il messaggio
+      setGameOver(false);
+      setTimer(0);
+      setMessage(response.data.message);
     } catch (error) {
       console.error(error);
     }
   };
 
   const startTimer = () => {
+    if (intervalId) {
+      clearInterval(intervalId); // Ferma il timer precedente se esiste
+    }
     const id = setInterval(() => {
-      setTimer((prevTime) => prevTime + 1); // Incrementa il timer ogni secondo
+      setTimer((prevTime) => prevTime + 1);
     }, 1000);
-    setIntervalId(id); // Salva l'ID dell'intervallo per poterlo fermare più tardi
+    setIntervalId(id); // Memorizza il nuovo intervalId
   };
 
   const stopTimer = () => {
-    clearInterval(intervalId); // Ferma il timer
-    setFinalTime(timer); // Salva il tempo finale
+    clearInterval(intervalId);
+    setFinalTime(timer);
   };
 
   const handleModeSelect = (selectedMode) => {
@@ -68,6 +86,7 @@ function App() {
 
   const handleCellClick = async (rowIndex, colIndex) => {
     try {
+      startTimer();
       let response;
       if (!clicked) {
         response = await axios.post("http://localhost:8080/api/clic", {
@@ -83,21 +102,27 @@ function App() {
       }
 
       setBoard(response.data.board);
-      setMessage(response.data.message); // Imposta il messaggio
+      setMessage(response.data.message);
 
-      // Se il gioco è finito (vittoria o game over), ferma il timer
       if (response.data.gameOver) {
         setGameOver(true);
-        stopTimer(); // Ferma il timer
+        stopTimer();
       }
 
       if (response.data.gameWon) {
         setGameWon(true);
-        stopTimer(); // Ferma il timer
+        stopTimer();
       }
     } catch (error) {
       console.error("Errore nel click:", error);
     }
+  };
+
+  const handleCellRightClick = (rowIndex, colIndex, event) => {
+    event.preventDefault();
+    const newButtonText = [...buttonText];
+    newButtonText[rowIndex][colIndex] = "🏴";
+    setButtonText(newButtonText);
   };
 
   return (
@@ -228,7 +253,12 @@ function App() {
                             border: "1px solid black",
                             width: "30px",
                             height: "30px",
+                            textAlign: "center",
+                            verticalAlign: "middle",
                           }}
+                          onContextMenu={(e) =>
+                            handleCellRightClick(rowIndex, colIndex, e)
+                          }
                         >
                           {cell === null ? (
                             <button
@@ -240,16 +270,27 @@ function App() {
                                 height: "100%",
                                 backgroundColor: "#ccc",
                                 border: "none",
+                                fontSize:
+                                  buttonText[rowIndex]?.[colIndex] === "🏴"
+                                    ? "10px"
+                                    : "initial",
                               }}
-                              disabled={gameOver} // Disabilita il bottone se il gioco è finito
-                            />
+                              disabled={
+                                gameOver || buttonText[rowIndex]?.[colIndex]
+                              }
+                            >
+                              {buttonText[rowIndex]?.[colIndex]}
+                            </button>
                           ) : (
                             <div
                               style={{
-                                textAlign: "center",
-                                lineHeight: "30px",
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                height: "100%",
                                 backgroundColor: "#eee",
                                 color: getColor(cell),
+                                fontSize: "18px",
                               }}
                             >
                               {cell === -1 ? "💣" : cell === 0 ? "" : cell}
@@ -266,15 +307,12 @@ function App() {
 
           {/* GAME OVER */}
           {gameOver && (
-            <div style={{ marginTop: "30px", fontSize: "24px" }}>
-              {message} {/* Visualizza il messaggio di game over */}
-            </div>
+            <div style={{ marginTop: "30px", fontSize: "24px" }}>{message}</div>
           )}
+
           {/* GAME WON */}
           {gameWon && (
-            <div style={{ marginTop: "30px", fontSize: "24px" }}>
-              {message} {/* Visualizza il messaggio di game won */}
-            </div>
+            <div style={{ marginTop: "30px", fontSize: "24px" }}>{message}</div>
           )}
 
           {/* TIMER */}

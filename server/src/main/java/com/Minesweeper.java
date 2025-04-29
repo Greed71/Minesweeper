@@ -53,7 +53,7 @@ public class Minesweeper {
     }
 
     public void revealCell(int row, int col) {
-        if (!isInBounds(row, col) || revealed[row][col] || gameOver)
+        if (!isInBounds(row, col) || revealed[row][col] || gameOver || flagged[row][col] == true) 
             return;
 
         if (!minesPlaced) {
@@ -150,6 +150,12 @@ public class Minesweeper {
 
     public boolean isGameWon() {
         return gameWon;
+    }
+
+    public void flagCell(int row, int col) {
+        if (isInBounds(row, col) && !revealed[row][col]) {
+            flagged[row][col] = !flagged[row][col];  // Toggle the flag
+        }
     }
 
     public boolean checkWin() {

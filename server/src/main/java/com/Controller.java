@@ -78,4 +78,15 @@ public class Controller {
         return response;
     }
 
+    @PostMapping("/flag")
+    @CrossOrigin(origins = "http://localhost:5173")
+    public Map<String, Object> flag(@RequestBody ClickPosition click) {
+        minesweeper.flagCell(click.getRow(), click.getCol());
+        
+        // Rispondi con la board aggiornata
+        Map<String, Object> response = new HashMap<>();
+        response.put("board", minesweeper.getVisibleBoard());
+        return response;
+    }
+
 }

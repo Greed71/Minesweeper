@@ -35,7 +35,7 @@ function Register() {
       } else {
         // Registrazione
         if (form.password !== form.confirmPassword) {
-          setError("Le password non coincidono.");
+          setError("The passwords don't match.");
           return;
         }
         const response = await axios.post("http://localhost:8080/auth/register", {
@@ -44,18 +44,18 @@ function Register() {
           password: form.password
         });
         localStorage.setItem("loggedUser", JSON.stringify(response.data));
-        console.log("Registrazione completata:", response.data);
+        console.log("Sign in completed:", response.data);
         window.location.href = "/";
       }
     } catch (error) {
       console.error("Errore durante l'autenticazione:", error);
-      setError("Credenziali non valide o errore di rete.");
+      setError("Invalid credentials or network error.");
     }
   };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: "100px" }}>
-      <h1 style={{ fontSize: "2rem", marginBottom: "20px" }}>{isLogin ? "Login" : "Registrazione"}</h1>
+      <h1 style={{ fontSize: "2rem", marginBottom: "20px" }}>{isLogin ? "Sign in" : "Sign up"}</h1>
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "15px", width: "300px" }}>
         <input
           type="email"
@@ -90,7 +90,7 @@ function Register() {
           <input
             type="password"
             name="confirmPassword"
-            placeholder="Conferma Password"
+            placeholder="Confirm Password"
             value={form.confirmPassword}
             onChange={handleChange}
             required
@@ -99,14 +99,14 @@ function Register() {
         )}
         {error && <div style={{ color: "red", fontSize: "14px" }}>{error}</div>}
         <button type="submit" style={{ padding: "10px", fontSize: "16px", backgroundColor: "#000", color: "#fff", border: "none" }}>
-          {isLogin ? "Accedi" : "Registrati"}
+          {isLogin ? "Sign in" : "Sign up"}
         </button>
       </form>
       <button
         onClick={() => setIsLogin(!isLogin)}
         style={{ marginTop: "20px", background: "none", border: "none", color: "blue", textDecoration: "underline", cursor: "pointer" }}
       >
-        {isLogin ? "Non hai un account? Registrati" : "Hai già un account? Accedi"}
+        {isLogin ? "Don't have an account? Register" : "Do you already have an account? Sign in"}
       </button>
     </div>
   );

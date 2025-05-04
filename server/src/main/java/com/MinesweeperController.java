@@ -1,8 +1,13 @@
 package com;
 
-import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api")
@@ -31,25 +36,25 @@ public class MinesweeperController {
     }
 
     @PostMapping("/clic")
-@CrossOrigin(origins = "http://localhost:5173")
-public Map<String, Object> firstClick(@RequestBody ClickPosition click) {
-    minesweeper.revealCell(click.getRow(), click.getCol());
+    @CrossOrigin(origins = "http://localhost:5173")
+    public Map<String, Object> firstClick(@RequestBody ClickPosition click) {
+        minesweeper.revealCell(click.getRow(), click.getCol());
 
-    // Se il gioco è finito, lo segnaliamo
-    boolean gameWon = minesweeper.isGameWon();
+        // Se il gioco è finito, lo segnaliamo
+        boolean gameWon = minesweeper.isGameWon();
 
-    // Rispondiamo con la board aggiornata, gameOver e il messaggio
-    Map<String, Object> response = new HashMap<>();
-    response.put("board", minesweeper.getVisibleBoard());
-    response.put("gameWon", gameWon);
+        // Rispondiamo con la board aggiornata, gameOver e il messaggio
+        Map<String, Object> response = new HashMap<>();
+        response.put("board", minesweeper.getVisibleBoard());
+        response.put("gameWon", gameWon);
 
-    // Se il gioco è vinto, inviamo il messaggio di vittoria
-    if (gameWon) {
-        response.put("message", "Congratulazioni! Hai vinto!");
+        // Se il gioco è vinto, inviamo il messaggio di vittoria
+        if (gameWon) {
+            response.put("message", "Congratulazioni! Hai vinto!");
+        }
+
+        return response;
     }
-
-    return response;
-}
 
     @PostMapping("/reveal")
     @CrossOrigin(origins = "http://localhost:5173")
@@ -82,11 +87,10 @@ public Map<String, Object> firstClick(@RequestBody ClickPosition click) {
     @CrossOrigin(origins = "http://localhost:5173")
     public Map<String, Object> flag(@RequestBody ClickPosition click) {
         minesweeper.flagCell(click.getRow(), click.getCol());
-        
+
         // Rispondi con la board aggiornata
         Map<String, Object> response = new HashMap<>();
         response.put("board", minesweeper.getVisibleBoard());
         return response;
     }
-
 }

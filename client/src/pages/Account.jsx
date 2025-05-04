@@ -64,9 +64,9 @@ function Account() {
       <div style={{ marginTop: "30px", width: "300px" }}>
         <button
           onClick={() => setShowPasswordForm(!showPasswordForm)}
-          style={{ padding: "10px", width: "100%", backgroundColor: "#000", color: "#fff", border: "none", marginBottom: "10px" }}
+          style={{ padding: "10px", width: "60%", backgroundColor: "#000", color: "#fff", border: "none", marginBottom: "10px" }}
         >
-          {showPasswordForm ? "Annulla" : "Cambia password"}
+          {showPasswordForm ? "Back" : "Change password"}
         </button>
 
         {showPasswordForm && (
@@ -75,28 +75,19 @@ function Account() {
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Nuova password"
+              placeholder="New password"
               style={{ padding: "10px", width: "90%", marginBottom: "10px" }}
             />
             <button
               onClick={handlePasswordChange}
               style={{ padding: "10px", width: "100%", backgroundColor: "#000", color: "#fff", border: "none" }}
             >
-              Aggiorna password
+              Change Password
             </button>
           </>
         )}
 
         {message && <p style={{ marginTop: "10px", color: "green" }}>{message}</p>}
-      </div>
-
-      <div style={{ marginTop: "40px", width: "300px" }}>
-        <h3>Punteggi salvati</h3>
-        <ul>
-          {scores.length > 0 ? scores.map((score, index) => (
-            <li key={index}>{score.mode} - {score.time}s</li>
-          )) : <li>Nessun punteggio disponibile.</li>}
-        </ul>
       </div>
 
       <button

@@ -6,6 +6,7 @@ import Account from "./pages/Account";
 
 export default function AppRouter() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [resetCounter, setResetCounter] = useState(0);
 
   useEffect(() => {
     const user = localStorage.getItem("loggedUser");
@@ -14,23 +15,51 @@ export default function AppRouter() {
 
   return (
     <Router>
-      <div style={{ position: "fixed", top: 0, right: 0, padding: "20px", zIndex: 1000 }}>
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          right: 0,
+          padding: "20px",
+          zIndex: 1000,
+        }}
+      >
         {isLoggedIn ? (
-          <Link to="/account" style={{ textDecoration: "none", fontSize: "20px" }}>👤</Link>
+          <Link
+            to="/account"
+            style={{ textDecoration: "none", fontSize: "20px" }}
+          >
+            👤
+          </Link>
         ) : (
-          <Link to="/register" style={{ textDecoration: "none", fontWeight: "bold" }}>
+          <Link
+            to="/register"
+            style={{ textDecoration: "none", fontWeight: "bold" }}
+          >
             Signup / Login
           </Link>
         )}
       </div>
-      <div style={{ position: "fixed", top: 0, left: 0, padding: "20px", zIndex: 1000 }}>
-        <Link to="/" style={{ textDecoration: "none", fontWeight: "bold" }}>
+      <div
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          padding: "20px",
+          zIndex: 1000,
+        }}
+      >
+        <Link
+          to="/"
+          onClick={() => setResetCounter((prev) => prev + 1)}
+          style={{ textDecoration: "none", fontWeight: "bold" }}
+        >
           Minesweeper
         </Link>
       </div>
 
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<Home resetTrigger={resetCounter} />} />
         <Route path="/register" element={<Register />} />
         <Route path="/account" element={<Account />} />
       </Routes>

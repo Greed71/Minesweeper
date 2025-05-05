@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: minesweeper-backend
+    env: java
+    buildCommand: "./mvnw clean install"
+    startCommand: "java -jar target/*.jar"
+    repo: https://github.com/Greed71/Minesweeper
+    branch: main
+    envVars:
+      - key: PORT
+        value: 8080

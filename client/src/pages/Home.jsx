@@ -137,7 +137,7 @@ function Home({ resetTrigger }) {
           username: user.username, // ora user è un oggetto
           points: timer,
           difficulty: mode,
-        });
+        }, { withCredentials: true });
         const updated = await axios.get(
           `https://minesweeper-back.onrender.com/score/leaderboard?difficulty=${mode}`
         );
@@ -191,13 +191,13 @@ function Home({ resetTrigger }) {
         response = await axios.post("https://minesweeper-back.onrender.com/api/clic", {
           row: rowIndex,
           col: colIndex,
-        });
+        }, { withCredentials: true });
         setClicked(true);
       } else {
         response = await axios.post("https://minesweeper-back.onrender.com/api/reveal", {
           row: rowIndex,
           col: colIndex,
-        });
+        }, { withCredentials: true });
       }
 
       setBoard(response.data.board);

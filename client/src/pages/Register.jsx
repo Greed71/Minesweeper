@@ -35,7 +35,7 @@ function Register() {
         const response = await axios.post("https://minesweeper-back.onrender.com/auth/login", {
           mail: form.mail,
           password: form.password
-        });
+        }, { withCredentials: true });
         localStorage.setItem("loggedUser", JSON.stringify(response.data));
         console.log("Login effettuato:", response.data);
         window.location.href = "/";
@@ -49,7 +49,7 @@ function Register() {
           mail: form.mail,
           username: form.username,
           password: form.password
-        });
+        }, { withCredentials: true });
         localStorage.setItem("loggedUser", JSON.stringify(response.data));
         console.log("Sign in completed:", response.data);
         window.location.href = "/";

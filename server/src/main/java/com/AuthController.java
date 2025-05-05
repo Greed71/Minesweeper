@@ -15,7 +15,7 @@ import jakarta.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
+@CrossOrigin(origins = "https://minesweeper-two-drab.vercel.app", allowCredentials = "true")
 public class AuthController {
 
     private final UserRepo userRepository;
@@ -25,10 +25,17 @@ public class AuthController {
         this.userRepository = userRepository;
     }
 
+    private boolean containsInvalidChars(String input) {
+        return input != null && input.matches(".*[\"'`;*\\\\].*");
+    }
+
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody User user) {
         if (userRepository.findByUsername(user.getUsername()) != null) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Username già in uso");
+        }
+        if (containsInvalidChars(user.getPassword()) || containsInvalidChars(user.getUsername())) {
+            return ResponseEntity.badRequest().body("Invalid characters in input.");
         }
         if (userRepository.findByMail(user.getMail()) != null) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Mail già in uso");

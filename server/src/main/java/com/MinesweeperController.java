@@ -20,7 +20,7 @@ public class MinesweeperController {
     }
 
     @PostMapping("/genera")
-    @CrossOrigin(origins = "http://localhost:5173")
+    @CrossOrigin(origins = "https://minesweeper-two-drab.vercel.app")
     public Map<String, Object> generate(@RequestBody GameConfig config) {
         minesweeper.prepareEmptyBoard(config.getRows(), config.getCols(), config.getMines());
         System.out.println("Generato un nuovo campo di gioco con " + config.getRows() + " righe, " + config.getCols()
@@ -36,7 +36,7 @@ public class MinesweeperController {
     }
 
     @PostMapping("/clic")
-    @CrossOrigin(origins = "http://localhost:5173")
+    @CrossOrigin(origins = "https://minesweeper-two-drab.vercel.app")
     public Map<String, Object> firstClick(@RequestBody ClickPosition click) {
         minesweeper.revealCell(click.getRow(), click.getCol());
 
@@ -57,7 +57,7 @@ public class MinesweeperController {
     }
 
     @PostMapping("/reveal")
-    @CrossOrigin(origins = "http://localhost:5173")
+    @CrossOrigin(origins = "https://minesweeper-two-drab.vercel.app")
     public Map<String, Object> reveal(@RequestBody ClickPosition click) {
         minesweeper.revealCell(click.getRow(), click.getCol());
 
@@ -84,7 +84,7 @@ public class MinesweeperController {
     }
 
     @PostMapping("/flag")
-    @CrossOrigin(origins = "http://localhost:5173")
+    @CrossOrigin(origins = "https://minesweeper-two-drab.vercel.app")
     public Map<String, Object> flag(@RequestBody ClickPosition click) {
         minesweeper.flagCell(click.getRow(), click.getCol());
 

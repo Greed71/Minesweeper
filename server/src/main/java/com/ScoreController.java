@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/score")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins = "https://minesweeper-two-drab.vercel.app")
 public class ScoreController {
 
     private final ScoreRepo scoreRepo;
@@ -22,15 +22,6 @@ public class ScoreController {
     public ScoreController(ScoreRepo scoreRepo, UserRepo userRepo) {
         this.scoreRepo = scoreRepo;
         this.userRepo = userRepo;
-    }
-
-    private String translateDifficulty(String input) {
-        return switch (input.toLowerCase()) {
-            case "easy" -> "facile";
-            case "medium" -> "medio";
-            case "hard" -> "difficile";
-            default -> input;
-        };
     }
 
     @PostMapping("/save")
@@ -45,12 +36,11 @@ public class ScoreController {
 
     @GetMapping("/leaderboard")
     public List<Score> leaderboard(@RequestParam String difficulty) {
-        difficulty = translateDifficulty(difficulty);
         return scoreRepo.findTop10ByDifficultyOrderByPointsAsc(difficulty);
     }
 
     @GetMapping("/user")
-    @CrossOrigin(origins = "http://localhost:5173")
+    @CrossOrigin(origins = "https://minesweeper-two-drab.vercel.app")
     public List<Score> getUserScores(@RequestParam String username) {
         User user = userRepo.findByUsername(username);
         if (user == null) {

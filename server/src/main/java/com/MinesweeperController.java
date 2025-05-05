@@ -9,20 +9,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
-
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "https://minesweeper-two-drab.vercel.app")
+@CrossOrigin(origins = "https://minesweeper-two-drab.vercel.app", allowCredentials = "true")
 public class MinesweeperController {
 
+    private final Map<String, Minesweeper> sessions = new HashMap<>();
+
     @PostMapping("/genera")
-    public Map<String, Object> generate(@RequestBody GameConfig config, HttpServletRequest request) {
-        HttpSession session = request.getSession(true);
+    public Map<String, Object> generate(@RequestBody GameConfig config) {
         Minesweeper minesweeper = new Minesweeper();
         minesweeper.prepareEmptyBoard(config.getRows(), config.getCols(), config.getMines());
-        session.setAttribute("game", minesweeper);
+        sessions.put(config.getSessionId(), minesweeper);
 
         Map<String, Object> response = new HashMap<>();
         response.put("board", minesweeper.getVisibleBoard());
@@ -32,9 +30,8 @@ public class MinesweeperController {
     }
 
     @PostMapping("/clic")
-    public Map<String, Object> firstClick(@RequestBody ClickPosition click, HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        Minesweeper minesweeper = (Minesweeper) session.getAttribute("game");
+    public Map<String, Object> firstClick(@RequestBody ClickPosition click) {
+        Minesweeper minesweeper = sessions.get(click.getSessionId());
 
         if (minesweeper == null) {
             throw new IllegalStateException("Partita non trovata.");
@@ -46,14 +43,14 @@ public class MinesweeperController {
         response.put("board", minesweeper.getVisibleBoard());
         response.put("gameOver", minesweeper.isGameOver());
         response.put("gameWon", minesweeper.isGameWon());
-        response.put("message", minesweeper.isGameOver() ? "Hai perso!" : (minesweeper.isGameWon() ? "Hai vinto!" : "Continua a giocare"));
+        response.put("message", minesweeper.isGameOver() ? "Hai perso!"
+                : (minesweeper.isGameWon() ? "Hai vinto!" : "Continua a giocare"));
         return response;
     }
 
     @PostMapping("/reveal")
-    public Map<String, Object> reveal(@RequestBody ClickPosition click, HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        Minesweeper minesweeper = (Minesweeper) session.getAttribute("game");
+    public Map<String, Object> reveal(@RequestBody ClickPosition click) {
+        Minesweeper minesweeper = sessions.get(click.getSessionId());
 
         if (minesweeper == null) {
             throw new IllegalStateException("Partita non trovata.");
@@ -65,7 +62,8 @@ public class MinesweeperController {
         response.put("board", minesweeper.getVisibleBoard());
         response.put("gameOver", minesweeper.isGameOver());
         response.put("gameWon", minesweeper.isGameWon());
-        response.put("message", minesweeper.isGameOver() ? "Hai perso!" : (minesweeper.isGameWon() ? "Hai vinto!" : "Continua a giocare"));
+        response.put("message", minesweeper.isGameOver() ? "Hai perso!"
+                : (minesweeper.isGameWon() ? "Hai vinto!" : "Continua a giocare"));
         return response;
     }
 }

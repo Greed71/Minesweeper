@@ -22,6 +22,7 @@ function Home({ resetTrigger }) {
   const [showLeaderboard, setShowLeaderboard] = useState(true);
   const [user, setUser] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
+  const [sessionId] = useState(() => crypto.randomUUID());
 
   useEffect(() => {
     if (row > 0 && col > 0) {
@@ -82,6 +83,7 @@ function Home({ resetTrigger }) {
         row: row,
         col: col,
         mines: mines,
+        sessionId: sessionId,
       });
       setButtonText(
         Array(row)
@@ -191,13 +193,15 @@ function Home({ resetTrigger }) {
         response = await axios.post("https://minesweeper-back.onrender.com/api/clic", {
           row: rowIndex,
           col: colIndex,
-        }, { withCredentials: true });
+          sessionId: sessionId,
+        });
         setClicked(true);
       } else {
         response = await axios.post("https://minesweeper-back.onrender.com/api/reveal", {
           row: rowIndex,
           col: colIndex,
-        }, { withCredentials: true });
+          sessionId: sessionId,
+        });
       }
 
       setBoard(response.data.board);

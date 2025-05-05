@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class ClickPosition {
     private int row;
     private int col;
+    private String sessionId;
 
     public ClickPosition() {}
 
@@ -26,5 +27,15 @@ public class ClickPosition {
     @JsonProperty("col")
     public void setCol(int col) {
         this.col = col;
+    }
+
+    @JsonProperty("sessionId")
+    public String getSessionId() {
+        return sessionId;
+    }
+
+    @JsonProperty("sessionId")
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
     }
 }

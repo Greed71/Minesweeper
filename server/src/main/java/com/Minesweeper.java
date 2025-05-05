@@ -1,11 +1,14 @@
 package com;
 
+import java.io.Serializable;
 import java.util.Random;
+
 import org.springframework.stereotype.Service;
 
 @Service
-public class Minesweeper {
+public class Minesweeper implements Serializable{
 
+    private static final long serialVersionUID = 1L;
     private int rows;
     private int cols;
     private int mineCount;

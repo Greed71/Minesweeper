@@ -1,0 +1,7 @@
+!.mvn/
+!.mvn/wrapper/
+*.iml
+.idea/
+*.log
+*.md
+*.zip

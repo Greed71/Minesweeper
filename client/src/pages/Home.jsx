@@ -55,7 +55,7 @@ function Home({ resetTrigger }) {
   useEffect(() => {
     if (mode) {
       axios
-        .get(`http://localhost:8080/score/leaderboard?difficulty=${mode}`)
+        .get(`https://minesweeper-back.onrender.com/score/leaderboard?difficulty=${mode}`)
         .then((res) => setLeaderboard(res.data))
         .catch((err) => console.error("Errore nel recupero leaderboard:", err));
     }
@@ -67,7 +67,7 @@ function Home({ resetTrigger }) {
       setUser(JSON.parse(storedUser));
     } else {
       axios
-        .get("http://localhost:8080/auth/user", { withCredentials: true })
+        .get("https://minesweeper-back.onrender.com/auth/user", { withCredentials: true })
         .then((res) => {
           setUser(res.data);
           localStorage.setItem("loggedUser", JSON.stringify(res.data));
@@ -78,7 +78,7 @@ function Home({ resetTrigger }) {
 
   const handleSubmit = async () => {
     try {
-      const response = await axios.post("http://localhost:8080/api/genera", {
+      const response = await axios.post("https://minesweeper-back.onrender.com/api/genera", {
         row: row,
         col: col,
         mines: mines,
@@ -133,13 +133,13 @@ function Home({ resetTrigger }) {
           );
           return;
         }
-        await axios.post("http://localhost:8080/score/save", {
+        await axios.post("https://minesweeper-back.onrender.com/score/save", {
           username: user.username, // ora user è un oggetto
           points: timer,
           difficulty: mode,
         });
         const updated = await axios.get(
-          `http://localhost:8080/score/leaderboard?difficulty=${mode}`
+          `https://minesweeper-back.onrender.com/score/leaderboard?difficulty=${mode}`
         );
         setLeaderboard(updated.data);
       }
@@ -188,13 +188,13 @@ function Home({ resetTrigger }) {
 
       let response;
       if (!clicked) {
-        response = await axios.post("http://localhost:8080/api/clic", {
+        response = await axios.post("https://minesweeper-back.onrender.com/api/clic", {
           row: rowIndex,
           col: colIndex,
         });
         setClicked(true);
       } else {
-        response = await axios.post("http://localhost:8080/api/reveal", {
+        response = await axios.post("https://minesweeper-back.onrender.com/api/reveal", {
           row: rowIndex,
           col: colIndex,
         });

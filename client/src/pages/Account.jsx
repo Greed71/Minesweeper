@@ -20,7 +20,7 @@ function Account() {
 
   useEffect(() => {
     if (user) {
-      axios.get(`http://localhost:8080/score/user?username=${user.username}`)
+      axios.get(`https://minesweeper-back.onrender.com/score/user?username=${user.username}`)
         .then(response => setScores(response.data))
         .catch(error => console.error("Errore nel recupero punteggi:", error));
     }
@@ -34,7 +34,7 @@ function Account() {
 
   const handlePasswordChange = async () => {
     try {
-      await axios.put("http://localhost:8080/auth/change-password", {
+      await axios.put("https://minesweeper-back.onrender.com/auth/change-password", {
         username: user.username,
         newPassword: newPassword
       });

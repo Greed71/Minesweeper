@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: minesweeper-backend
+    env: docker
+    plan: free
+    autoDeploy: true
+    region: frankfurt
+    buildCommand: "./mvnw clean package -DskipTests"
+    startCommand: "java -jar app.jar"

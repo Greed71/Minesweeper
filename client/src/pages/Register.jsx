@@ -25,7 +25,7 @@ function Register() {
     try {
       if (isLogin) {
         // Login
-        const response = await axios.post("http://localhost:8080/auth/login", {
+        const response = await axios.post("https://minesweeper-back.onrender.com/auth/login", {
           mail: form.mail,
           password: form.password
         });
@@ -38,7 +38,7 @@ function Register() {
           setError("The passwords don't match.");
           return;
         }
-        const response = await axios.post("http://localhost:8080/auth/register", {
+        const response = await axios.post("https://minesweeper-back.onrender.com/auth/register", {
           mail: form.mail,
           username: form.username,
           password: form.password

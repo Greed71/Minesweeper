@@ -19,7 +19,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = "${FRONT}", allowCredentials = "true")
+@CrossOrigin(origins = "${FRONT}")
 public class AuthController {
 
     private final UserRepo userRepository;

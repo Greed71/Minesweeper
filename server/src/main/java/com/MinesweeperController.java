@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = "${FRONT}", allowCredentials = "true")
+@CrossOrigin(origins = "${FRONT}")
 public class MinesweeperController {
 
     private final Map<String, Minesweeper> sessions = new HashMap<>();

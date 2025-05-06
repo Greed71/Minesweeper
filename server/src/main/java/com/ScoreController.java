@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/score")
-@CrossOrigin(origins = "https://minesweeper-two-drab.vercel.app")
+@CrossOrigin(origins = "${FRONT}")
 public class ScoreController {
 
     private final ScoreRepo scoreRepo;
@@ -40,7 +40,7 @@ public class ScoreController {
     }
 
     @GetMapping("/user")
-    @CrossOrigin(origins = "https://minesweeper-two-drab.vercel.app")
+    @CrossOrigin(origins = "front")
     public List<Score> getUserScores(@RequestParam String username) {
         User user = userRepo.findByUsername(username);
         if (user == null) {

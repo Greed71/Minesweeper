@@ -23,6 +23,7 @@ function Home({ resetTrigger }) {
   const [user, setUser] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
   const [sessionId] = useState(() => crypto.randomUUID());
+  const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
   useEffect(() => {
     if (row > 0 && col > 0) {
@@ -37,7 +38,7 @@ function Home({ resetTrigger }) {
   useEffect(() => {
     const pingInterval = setInterval(() => {
       axios
-        .get("https://minesweeper-back.onrender.com/api/ping")
+        .get(`${backendUrl}/api/ping`)
         .then((response) => {
           console.log("Ping inviato con successo:", response.data);
         })
@@ -74,7 +75,7 @@ function Home({ resetTrigger }) {
   useEffect(() => {
     if (mode) {
       axios
-        .get(`https://minesweeper-back.onrender.com/score/leaderboard?difficulty=${mode}`)
+        .get(`${backendUrl}/score/leaderboard?difficulty=${mode}`)
         .then((res) => setLeaderboard(res.data))
         .catch((err) => console.error("Errore nel recupero leaderboard:", err));
     }
@@ -86,7 +87,7 @@ function Home({ resetTrigger }) {
       setUser(JSON.parse(storedUser));
     } else {
       axios
-        .get("https://minesweeper-back.onrender.com/auth/user", { withCredentials: true })
+        .get(`${backendUrl}/auth/user`, { withCredentials: true })
         .then((res) => {
           setUser(res.data);
           localStorage.setItem("loggedUser", JSON.stringify(res.data));
@@ -97,7 +98,7 @@ function Home({ resetTrigger }) {
 
   const handleSubmit = async () => {
     try {
-      const response = await axios.post("https://minesweeper-back.onrender.com/api/genera", {
+      const response = await axios.post(`${backendUrl}/api/genera`, {
         row: row,
         col: col,
         mines: mines,
@@ -153,13 +154,13 @@ function Home({ resetTrigger }) {
           );
           return;
         }
-        await axios.post("https://minesweeper-back.onrender.com/score/save", {
+        await axios.post(`${backendUrl}/score/save`, {
           username: user.username, // ora user è un oggetto
           points: timer,
           difficulty: mode,
         }, { withCredentials: true });
         const updated = await axios.get(
-          `https://minesweeper-back.onrender.com/score/leaderboard?difficulty=${mode}`
+          `${backendUrl}/score/leaderboard?difficulty=${mode}`
         );
         setLeaderboard(updated.data);
       }
@@ -208,14 +209,14 @@ function Home({ resetTrigger }) {
 
       let response;
       if (!clicked) {
-        response = await axios.post("https://minesweeper-back.onrender.com/api/clic", {
+        response = await axios.post(`${backendUrl}/api/clic`, {
           row: rowIndex,
           col: colIndex,
           sessionId: sessionId,
         });
         setClicked(true);
       } else {
-        response = await axios.post("https://minesweeper-back.onrender.com/api/reveal", {
+        response = await axios.post(`${backendUrl}/api/reveal`, {
           row: rowIndex,
           col: colIndex,
           sessionId: sessionId,

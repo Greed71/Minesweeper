@@ -10,6 +10,7 @@ function Account() {
   const [scores, setScores] = useState([]);
   const [message, setMessage] = useState("");
   const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const backendUrl = process.env.REACT_APP_BACKEND_URL;
 
   useEffect(() => {
     const storedUser = localStorage.getItem("loggedUser");
@@ -20,7 +21,7 @@ function Account() {
 
   useEffect(() => {
     if (user) {
-      axios.get(`https://minesweeper-back.onrender.com/score/user?username=${user.username}`)
+      axios.get(`${backendUrl}/score/user?username=${user.username}`)
         .then(response => setScores(response.data))
         .catch(error => console.error("Errore nel recupero punteggi:", error));
     }
@@ -34,7 +35,7 @@ function Account() {
 
   const handlePasswordChange = async () => {
     try {
-      await axios.put("https://minesweeper-back.onrender.com/auth/change-password", {
+      await axios.put(`${backendUrl}/auth/change-password`, {
         username: user.username,
         newPassword: newPassword
       });

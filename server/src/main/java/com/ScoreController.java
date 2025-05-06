@@ -40,7 +40,6 @@ public class ScoreController {
     }
 
     @GetMapping("/user")
-    @CrossOrigin(origins = "front")
     public List<Score> getUserScores(@RequestParam String username) {
         User user = userRepo.findByUsername(username);
         if (user == null) {

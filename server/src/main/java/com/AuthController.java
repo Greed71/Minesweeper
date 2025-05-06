@@ -19,7 +19,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = "https://minesweeper-two-drab.vercel.app", allowCredentials = "true")
+@CrossOrigin(origins = "${FRONT}", allowCredentials = "true")
 public class AuthController {
 
     private final UserRepo userRepository;

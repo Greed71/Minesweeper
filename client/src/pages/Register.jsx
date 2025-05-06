@@ -4,7 +4,7 @@ import axios from "axios";
 
 function Register() {
   const navigate = useNavigate();
-  const backendUrl = process.env.REACT_APP_BACKEND_URL;
+  const backendUrl = import.meta.env.REACT_APP_BACKEND_URL;
   const [form, setForm] = useState({
     mail: "",
     username: "",

@@ -9,7 +9,7 @@ function Account() {
   const [scores, setScores] = useState([]);
   const [message, setMessage] = useState("");
   const [showPasswordForm, setShowPasswordForm] = useState(false);
-  const backendUrl = process.env.REACT_APP_BACKEND_URL;
+  const backendUrl = import.meta.env.REACT_APP_BACKEND_URL;
   const token = localStorage.getItem("token"); // Assicurati di memorizzare il token JWT
 
   useEffect(() => {

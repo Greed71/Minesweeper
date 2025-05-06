@@ -23,7 +23,7 @@ function Home({ resetTrigger }) {
   const [user, setUser] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
   const [sessionId] = useState(() => crypto.randomUUID());
-  const backendUrl = process.env.REACT_APP_BACKEND_URL;
+  const backendUrl = import.meta.env.REACT_APP_BACKEND_URL;
 
   useEffect(() => {
     if (row > 0 && col > 0) {

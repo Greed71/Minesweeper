@@ -35,6 +35,24 @@ function Home({ resetTrigger }) {
   }, [row, col]);
 
   useEffect(() => {
+    const pingInterval = setInterval(() => {
+      axios
+        .get("https://minesweeper-back.onrender.com/api/ping")
+        .then((response) => {
+          console.log("Ping inviato con successo:", response.data);
+        })
+        .catch((error) => {
+          console.error("Errore nel ping:", error);
+        });
+    }, 60000); // Ping ogni 1 minuto (60.000 ms)
+
+    // Pulizia dell'intervallo se il componente viene smontato
+    return () => {
+      clearInterval(pingInterval);
+    };
+  }, []);
+
+  useEffect(() => {
     setGameStarted(false);
     setRow(0);
     setColumns(0);

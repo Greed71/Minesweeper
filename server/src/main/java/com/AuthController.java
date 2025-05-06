@@ -1,21 +1,25 @@
 package com;
 
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.auth0.jwt.exceptions.JWTVerificationException;
+
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = "${FRONT}", allowCredentials = "true")
+@CrossOrigin(origins = "https://minesweeper-two-drab.vercel.app", allowCredentials = "true")
 public class AuthController {
 
     private final UserRepo userRepository;
@@ -43,47 +47,68 @@ public class AuthController {
         user.setPassword(encoder.encode(user.getPassword()));
         User saved = userRepository.save(user);
         saved.setPassword(null); // sicurezza
-        return ResponseEntity.ok(saved); // ✅ ritorna l'utente registrato
+        return ResponseEntity.ok(saved); // ritorna l'utente registrato
     }
 
-    @PostMapping("/changePassword")
-    public String changePassword(@RequestBody PasswordChangeRequest req) {
-        User found = userRepository.findByUsername(req.getUsername());
-        if (found != null) {
-            found.setPassword(encoder.encode(req.getNewPassword()));
-            userRepository.save(found);
-            return "Password cambiata con successo";
+    @PutMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody PasswordChangeRequest req, HttpServletRequest request) {
+        String token = request.getHeader("Authorization");
+
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token non valido");
         }
-        return "Utente non trovato";
+
+        token = token.substring(7);  // Rimuovi "Bearer " dal token
+
+        try {
+            String username = JwtUtils.validateTokenAndExtractUsername(token);
+
+            User found = userRepository.findByUsername(username);
+            if (found != null) {
+                // Verifica la password attuale
+                if (!encoder.matches(req.getCurrentPassword(), found.getPassword())) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Password attuale errata");
+                }
+
+                // Hash della nuova password prima di salvarla
+                found.setPassword(encoder.encode(req.getNewPassword()));  
+                userRepository.save(found);
+                return ResponseEntity.ok("Password aggiornata con successo");
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Utente non trovato");
+            }
+        } catch (JWTVerificationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token non valido");
+        }
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody User user, HttpServletRequest request) {
-        System.out.println("Tentativo login per: " + user.getMail());
-
+    public ResponseEntity<?> login(@RequestBody User user) {
         User found = userRepository.findByMail(user.getMail());
-        if (found == null) {
-            System.out.println("Utente non trovato");
+        if (found == null || !encoder.matches(user.getPassword(), found.getPassword())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenziali errate");
         }
 
-        if (encoder.matches(user.getPassword(), found.getPassword())) {
-            request.getSession(true).setAttribute("user", found); // salva utente in sessione
-            found.setPassword(null); // sicurezza
-            return ResponseEntity.ok(found);
-        }
-
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenziali errate");
+        // Genera un token JWT e restituiscilo
+        String token = JwtUtils.generateToken(found.getUsername());
+        return ResponseEntity.ok(Map.of("token", token));  // Restituisce il token
     }
 
     @GetMapping("/user")
     public ResponseEntity<?> getCurrentUser(HttpServletRequest request) {
-        HttpSession session = request.getSession(false);
-        if (session == null || session.getAttribute("user") == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Utente non autenticato");
+        String token = request.getHeader("Authorization");
+        if (token == null || !token.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token non valido");
         }
-        User user = (User) session.getAttribute("user");
-        return ResponseEntity.ok(user);
-    }
 
+        token = token.substring(7);  // Rimuovi "Bearer "
+        String username = JwtUtils.validateTokenAndExtractUsername(token);
+
+        User user = userRepository.findByUsername(username);
+        if (user != null) {
+            return ResponseEntity.ok(user);
+        }
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Utente non trovato");
+    }
 }

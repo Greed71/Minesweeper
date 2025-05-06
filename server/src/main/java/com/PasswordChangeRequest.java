@@ -1,17 +1,30 @@
 package com;
 
 public class PasswordChangeRequest {
-    private String username;
+    private String currentPassword;  // Aggiungi la password attuale
     private String newPassword;
 
-    public PasswordChangeRequest(String username, String newPassword) {
-        this.username = username;
+    // Costruttore con tutti i campi
+    public PasswordChangeRequest(String currentPassword, String newPassword) {
+        this.currentPassword = currentPassword;
         this.newPassword = newPassword;
     }
 
-    public String getUsername() { return username; }
-    public String getNewPassword() { return newPassword; }
+    // Getter e Setter per la password attuale
+    public String getCurrentPassword() { 
+        return currentPassword; 
+    }
+    
+    public void setCurrentPassword(String currentPassword) { 
+        this.currentPassword = currentPassword; 
+    }
 
-    public void setUsername(String username) { this.username = username; }
-    public void setNewPassword(String newPassword) { this.newPassword = newPassword; }
+    // Getter e Setter per la nuova password
+    public String getNewPassword() { 
+        return newPassword; 
+    }
+
+    public void setNewPassword(String newPassword) { 
+        this.newPassword = newPassword; 
+    }
 }

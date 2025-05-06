@@ -1,4 +1,3 @@
-// pages/Account.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -11,6 +10,7 @@ function Account() {
   const [message, setMessage] = useState("");
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const backendUrl = process.env.REACT_APP_BACKEND_URL;
+  const token = localStorage.getItem("token"); // Assicurati di memorizzare il token JWT
 
   useEffect(() => {
     const storedUser = localStorage.getItem("loggedUser");
@@ -29,16 +29,27 @@ function Account() {
 
   const handleLogout = () => {
     localStorage.removeItem("loggedUser");
+    localStorage.removeItem("token"); // Rimuovi il token JWT
     navigate("/");
     window.location.reload();
   };
 
   const handlePasswordChange = async () => {
+    if (!token) {
+      setMessage("Non sei autenticato.");
+      return;
+    }
+
     try {
       await axios.put(`${backendUrl}/auth/change-password`, {
         username: user.username,
         newPassword: newPassword
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}` 
+        }
       });
+
       setMessage("Password aggiornata con successo.");
       setNewPassword("");
     } catch (error) {

@@ -1,8 +1,7 @@
-// pages/Home.jsx
 import { useState, useEffect, useRef } from "react";
-import axios from "axios";
+import client from "../api/client.js";
+import { devWarn } from "../devLog.js";
 import "../App.css";
-
 function Home({ resetTrigger }) {
   const [row, setRow] = useState(0);
   const [col, setColumns] = useState(0);
@@ -37,22 +36,13 @@ function Home({ resetTrigger }) {
 
   useEffect(() => {
     const pingInterval = setInterval(() => {
-      axios
-        .get(`${backendUrl}/api/ping`)
-        .then((response) => {
-          console.log("Ping inviato con successo:", response.data);
-        })
-        .catch((error) => {
-          console.error("Errore nel ping:", error);
-        });
-    }, 60000); // Ping ogni 1 minuto (60.000 ms)
+      client.get(`${backendUrl}/api/ping`).catch((err) => {
+        devWarn("Il backend non risponde (controlla che sia avviato).", err);
+      });
+    }, 60_000);
 
-    // Pulizia dell'intervallo se il componente viene smontato
-    return () => {
-      clearInterval(pingInterval);
-    };
-  }, []);
-
+    return () => clearInterval(pingInterval);
+  }, [backendUrl]);
   useEffect(() => {
     setGameStarted(false);
     setRow(0);
@@ -74,31 +64,42 @@ function Home({ resetTrigger }) {
 
   useEffect(() => {
     if (mode) {
-      axios
+      client
         .get(`${backendUrl}/score/leaderboard?difficulty=${mode}`)
         .then((res) => setLeaderboard(res.data))
-        .catch((err) => console.error("Errore nel recupero leaderboard:", err));
+        .catch((err) =>
+          devWarn("Classifica non caricata, riprova tra poco.", err)
+        );
     }
   }, [mode]);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
     const storedUser = localStorage.getItem("loggedUser");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    } else {
-      axios
-        .get(`${backendUrl}/auth/user`, { withCredentials: true })
+    if (token) {
+      client
+        .get(`${backendUrl}/auth/user`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
         .then((res) => {
           setUser(res.data);
           localStorage.setItem("loggedUser", JSON.stringify(res.data));
         })
-        .catch(() => setUser(null));
+        .catch(() => {
+          setUser(null);
+          localStorage.removeItem("token");
+          localStorage.removeItem("loggedUser");
+        });
+    } else if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    } else {
+      setUser(null);
     }
   }, []);
 
   const handleSubmit = async () => {
     try {
-      const response = await axios.post(`${backendUrl}/api/genera`, {
+      const response = await client.post(`${backendUrl}/api/genera`, {
         row: row,
         col: col,
         mines: mines,
@@ -119,10 +120,9 @@ function Home({ resetTrigger }) {
       intervalId.current = 0;
       setMessage(response.data.message);
     } catch (error) {
-      console.error(error);
+      devWarn("Non è partita la partita, controlla la connessione.", error);
     }
   };
-
   const handleBack = () => {
     setGameStarted(false);
     setRow(0);
@@ -154,20 +154,24 @@ function Home({ resetTrigger }) {
           );
           return;
         }
-        await axios.post(`${backendUrl}/score/save`, {
-          username: user.username, // ora user è un oggetto
-          points: timer,
-          difficulty: mode,
-        }, { withCredentials: true });
-        const updated = await axios.get(
+        const token = localStorage.getItem("token");
+        await client.post(
+          `${backendUrl}/score/save`,
+          { points: timer, difficulty: mode },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const updated = await client.get(
           `${backendUrl}/score/leaderboard?difficulty=${mode}`
         );
         setLeaderboard(updated.data);
       }
     } catch (err) {
-      console.error("Errore nel salvataggio del punteggio:", err);
-    }
-  };
+      devWarn("Punteggio non salvato.", err);
+    }  };
 
   function startTimer() {
     if (intervalId.current) return;
@@ -207,20 +211,13 @@ function Home({ resetTrigger }) {
       if (gameOver || gameWon) return;
       if (!intervalId.current) startTimer();
 
-      let response;
+      const response = await client.post(`${backendUrl}/api/reveal`, {
+        row: rowIndex,
+        col: colIndex,
+        sessionId: sessionId,
+      });
       if (!clicked) {
-        response = await axios.post(`${backendUrl}/api/clic`, {
-          row: rowIndex,
-          col: colIndex,
-          sessionId: sessionId,
-        });
         setClicked(true);
-      } else {
-        response = await axios.post(`${backendUrl}/api/reveal`, {
-          row: rowIndex,
-          col: colIndex,
-          sessionId: sessionId,
-        });
       }
 
       setBoard(response.data.board);
@@ -236,26 +233,21 @@ function Home({ resetTrigger }) {
         stopTimer(intervalId.current);
       }
     } catch (error) {
-      console.error("Errore nel click:", error);
-    }
-  };
+      devWarn("Questa mossa non è passata, riprova.", error);
+    }  };
 
   const handleCellRightClick = (rowIndex, colIndex, event) => {
-    event.preventDefault(); // Impedisce il comportamento predefinito del clic destro
+    event.preventDefault();
     const newButtonText = [...buttonText];
     if (gameOver || gameWon) return;
 
     if (newButtonText[rowIndex][colIndex] === "🏴") {
       newButtonText[rowIndex][colIndex] = "";
-      setFlags(flags - 1); // Rimuove una bandiera
-    } else {
-      if (flags < mines) {
-        // Non superare il numero di mine
-        newButtonText[rowIndex][colIndex] = "🏴";
-        setFlags(flags + 1); // Aggiunge una bandiera
-      }
+      setFlags(flags - 1);
+    } else if (flags < mines) {
+      newButtonText[rowIndex][colIndex] = "🏴";
+      setFlags(flags + 1);
     }
-
     setButtonText(newButtonText);
   };
 

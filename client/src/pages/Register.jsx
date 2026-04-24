@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import client from "../api/client.js";
+import { devWarn } from "../devLog.js";
 
 function Register() {
   const navigate = useNavigate();
@@ -31,30 +32,40 @@ function Register() {
     setMessage("");
     try {
       if (isLogin) {
-        // Login
-        const response = await axios.post(`${backendUrl}/auth/login`, {
+        const response = await client.post(`${backendUrl}/auth/login`, {
           mail: form.mail,
           password: form.password
-        }, { withCredentials: true });
-        localStorage.setItem("loggedUser", JSON.stringify(response.data));
+        });
+        const { token, user } = response.data;
+        if (token) {
+          localStorage.setItem("token", token);
+        }
+        if (user) {
+          localStorage.setItem("loggedUser", JSON.stringify(user));
+        }
         navigate("/");
       } else {
-        // Registration
         if (form.password !== form.confirmPassword) {
           setError("The passwords don't match.");
           return;
         }
-        const response = await axios.post(`${backendUrl}/auth/register`, {
+        const response = await client.post(`${backendUrl}/auth/register`, {
           mail: form.mail,
           username: form.username,
           password: form.password
-        }, { withCredentials: true });
-        localStorage.setItem("loggedUser", JSON.stringify(response.data));
+        });
+        const { token, user } = response.data;
+        if (token) {
+          localStorage.setItem("token", token);
+        }
+        if (user) {
+          localStorage.setItem("loggedUser", JSON.stringify(user));
+        }
         setMessage("Registration successful!");
         navigate("/");
       }
     } catch (error) {
-      console.error("Error during authentication:", error);
+      devWarn("Accesso non riuscito: controlla credenziali o connessione.", error);
       setError("Invalid credentials or network error.");
     }
   };

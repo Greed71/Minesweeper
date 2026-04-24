@@ -1,3 +1,4 @@
+// Barra in alto: “Minesweeper” azzera la partita, a destra login o profilo.
 import { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import Home from "./pages/Home";
@@ -51,7 +52,7 @@ export default function AppRouter() {
       >
         <Link
           to="/"
-          onClick={() => setResetCounter((prev) => prev + 1)}
+          onClick={() => setResetCounter((c) => c + 1)}
           style={{ textDecoration: "none", fontWeight: "bold" }}
         >
           Minesweeper

@@ -1,10 +1,10 @@
 package com;
 
-import java.util.Map;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.lang.NonNull;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -12,19 +12,21 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.auth0.jwt.exceptions.JWTVerificationException;
-
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
 
     private final UserRepo userRepository;
-    private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    public AuthController(UserRepo userRepository) {
+    public AuthController(
+            UserRepo userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     private boolean containsInvalidChars(String input) {
@@ -32,81 +34,56 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody User user) {
-        if (userRepository.findByUsername(user.getUsername()) != null) {
+    public ResponseEntity<?> register(@RequestBody @Valid RegisterRequest request) {
+        if (userRepository.findByUsername(request.getUsername()) != null) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Username già in uso");
         }
-        if (containsInvalidChars(user.getPassword()) || containsInvalidChars(user.getUsername())) {
+        if (containsInvalidChars(request.getPassword()) || containsInvalidChars(request.getUsername())) {
             return ResponseEntity.badRequest().body("Invalid characters in input.");
         }
-        if (userRepository.findByMail(user.getMail()) != null) {
+        if (userRepository.findByMail(request.getMail()) != null) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Mail già in uso");
         }
-        user.setPassword(encoder.encode(user.getPassword()));
+        User user = new User(request.getUsername(), request.getPassword(), request.getMail());
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         User saved = userRepository.save(user);
-        saved.setPassword(null); // sicurezza
-        return ResponseEntity.ok(saved); // ritorna l'utente registrato
+        String token = jwtService.generateToken(saved.getUsername());
+        return ResponseEntity.ok(new AuthResponseBody(token, saved));
     }
 
     @PutMapping("/change-password")
-    public ResponseEntity<?> changePassword(@RequestBody PasswordChangeRequest req, HttpServletRequest request) {
-        String token = request.getHeader("Authorization");
-
-        if (token == null || !token.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token non valido");
+    public ResponseEntity<String> changePassword(
+            @AuthenticationPrincipal @NonNull String username,
+            @RequestBody @Valid PasswordChangeRequest req) {
+        User found = userRepository.findByUsername(username);
+        if (found == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Utente non trovato");
         }
-
-        token = token.substring(7);  // Rimuovi "Bearer " dal token
-
-        try {
-            String username = JwtUtils.validateTokenAndExtractUsername(token);
-
-            User found = userRepository.findByUsername(username);
-            if (found != null) {
-                // Verifica la password attuale
-                if (!encoder.matches(req.getCurrentPassword(), found.getPassword())) {
-                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Password attuale errata");
-                }
-
-                // Hash della nuova password prima di salvarla
-                found.setPassword(encoder.encode(req.getNewPassword()));  
-                userRepository.save(found);
-                return ResponseEntity.ok("Password aggiornata con successo");
-            } else {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Utente non trovato");
-            }
-        } catch (JWTVerificationException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token non valido");
+        if (!passwordEncoder.matches(req.getCurrentPassword(), found.getPassword())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Password attuale errata");
         }
+        found.setPassword(passwordEncoder.encode(req.getNewPassword()));
+        userRepository.save(found);
+        return ResponseEntity.ok("Password aggiornata con successo");
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody User user) {
-        User found = userRepository.findByMail(user.getMail());
-        if (found == null || !encoder.matches(user.getPassword(), found.getPassword())) {
+    public ResponseEntity<?> login(@RequestBody @Valid LoginRequest request) {
+        User found = userRepository.findByMail(request.getMail());
+        if (found == null || !passwordEncoder.matches(request.getPassword(), found.getPassword())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Credenziali errate");
         }
-
-        // Genera un token JWT e restituiscilo
-        String token = JwtUtils.generateToken(found.getUsername());
-        return ResponseEntity.ok(Map.of("token", token));  // Restituisce il token
+        String token = jwtService.generateToken(found.getUsername());
+        return ResponseEntity.ok(new AuthResponseBody(token, found));
     }
 
     @GetMapping("/user")
-    public ResponseEntity<?> getCurrentUser(HttpServletRequest request) {
-        String token = request.getHeader("Authorization");
-        if (token == null || !token.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token non valido");
-        }
-
-        token = token.substring(7);  // Rimuovi "Bearer "
-        String username = JwtUtils.validateTokenAndExtractUsername(token);
-
+    public ResponseEntity<User> getCurrentUser(
+            @AuthenticationPrincipal @NonNull String username) {
         User user = userRepository.findByUsername(username);
-        if (user != null) {
-            return ResponseEntity.ok(user);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Utente non trovato");
+        return ResponseEntity.ok(user);
     }
 }

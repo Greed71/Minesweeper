@@ -1,14 +1,18 @@
 package com;
 
-import java.io.Serializable;
 import java.util.Random;
 
-import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Service
-public class Minesweeper implements Serializable{
+/**
+ * Campo minato: una istanza per partita. Non condividere la stessa istanza tra
+ * più sessioni utente in parallelo.
+ */
+public class Minesweeper {
 
-    private static final long serialVersionUID = 1L;
+    private static final Logger log = LoggerFactory.getLogger(Minesweeper.class);
+    private Random random = new Random();
     private int rows;
     private int cols;
     private int mineCount;
@@ -19,21 +23,6 @@ public class Minesweeper implements Serializable{
     private boolean gameOver = false;
     private boolean gameWon = false;
 
-    // Inizia una nuova partita
-    public void startNewGame(int rows, int cols, int mineCount) {
-        this.rows = rows;
-        this.cols = cols;
-        this.mineCount = mineCount;
-        this.board = new int[rows][cols];
-        this.revealed = new boolean[rows][cols];
-        this.flagged = new boolean[rows][cols];
-        initializeBoard();
-        placeMines(-1, -1); // Posiziona le mine senza protezione iniziale
-        calculateNumbers();
-        minesPlaced = true;
-    }
-
-    // Prepara una griglia vuota senza mine
     public void prepareEmptyBoard(int rows, int cols, int mineCount) {
         this.rows = rows;
         this.cols = cols;
@@ -44,10 +33,9 @@ public class Minesweeper implements Serializable{
         initializeBoard();
         minesPlaced = false;
         gameOver = false;
-        gameWon = false; // Resetta stato di vittoria
+        gameWon = false;
     }
 
-    // Inizializza la griglia (tutti i valori a 0)
     private void initializeBoard() {
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
@@ -58,12 +46,11 @@ public class Minesweeper implements Serializable{
         }
     }
 
-    // Rivelazione di una cella
     public void revealCell(int row, int col) {
-        if (!isInBounds(row, col) || revealed[row][col] || gameOver || flagged[row][col]) 
+        if (!isInBounds(row, col) || revealed[row][col] || gameOver || flagged[row][col]) {
             return;
+        }
 
-        // Posiziona le mine se non sono ancora state posizionate
         if (!minesPlaced) {
             do {
                 initializeBoard();
@@ -75,14 +62,12 @@ public class Minesweeper implements Serializable{
 
         revealed[row][col] = true;
 
-        // Se cliccata una mina, il gioco finisce
         if (board[row][col] == -1) {
             gameOver = true;
-            System.out.println("Game Over! Hai colpito una mina.");
+            log.debug("Mina colpita: row={} col={}", row, col);
             return;
         }
 
-        // Se la cella è vuota, scopri le celle limitrofe
         if (board[row][col] == 0) {
             for (int r = -1; r <= 1; r++) {
                 for (int c = -1; c <= 1; c++) {
@@ -93,14 +78,12 @@ public class Minesweeper implements Serializable{
             }
         }
 
-        // Verifica se il gioco è stato vinto
         if (checkWin()) {
             gameWon = true;
-            System.out.println("Congratulazioni! Hai vinto!");
+            log.debug("Partita vinta");
         }
     }
 
-    // Restituisce la griglia visibile (le celle rivelate)
     public Integer[][] getVisibleBoard() {
         Integer[][] visible = new Integer[rows][cols];
         for (int row = 0; row < rows; row++) {
@@ -111,28 +94,27 @@ public class Minesweeper implements Serializable{
         return visible;
     }
 
-    // Posiziona le mine sulla griglia, evitando la cella iniziale
     private void placeMines(int safeRow, int safeCol) {
-        Random rand = new Random();
         int placedMines = 0;
         while (placedMines < mineCount) {
-            int row = rand.nextInt(rows);
-            int col = rand.nextInt(cols);
+            int row = random.nextInt(rows);
+            int col = random.nextInt(cols);
 
             if ((row == safeRow && col == safeCol) || board[row][col] == -1) {
                 continue;
             }
 
-            board[row][col] = -1; // Posiziona una mina
+            board[row][col] = -1;
             placedMines++;
         }
     }
 
-    // Calcola i numeri delle celle in base al numero di mine adiacenti
     private void calculateNumbers() {
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
-                if (board[row][col] == -1) continue;
+                if (board[row][col] == -1) {
+                    continue;
+                }
                 int count = 0;
                 for (int r = -1; r <= 1; r++) {
                     for (int c = -1; c <= 1; c++) {
@@ -146,37 +128,53 @@ public class Minesweeper implements Serializable{
         }
     }
 
-    // Verifica se una cella è all'interno dei limiti della griglia
     private boolean isInBounds(int row, int col) {
         return row >= 0 && row < rows && col >= 0 && col < cols;
     }
 
-    // Verifica se il gioco è finito
     public boolean isGameOver() {
         return gameOver;
     }
 
-    // Verifica se il gioco è stato vinto
     public boolean isGameWon() {
         return gameWon;
     }
 
-    // Aggiungi o rimuovi una bandiera su una cella
     public void flagCell(int row, int col) {
         if (isInBounds(row, col) && !revealed[row][col]) {
-            flagged[row][col] = !flagged[row][col];  // Toglia o aggiungi la bandiera
+            flagged[row][col] = !flagged[row][col];
         }
     }
 
-    // Controlla se il gioco è vinto (tutte le celle senza mine rivelate)
     public boolean checkWin() {
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
                 if (board[row][col] != -1 && !revealed[row][col]) {
-                    return false; // Se una cella non è rivelata e non è una mina, il gioco non è vinto
+                    return false;
                 }
             }
         }
-        return true; // Tutte le celle senza mine sono rivelate, gioco vinto
+        return true;
+    }
+
+    /** Solo test: generatore fissato per replicare le partite. */
+    void setRandomForTest(Random random) {
+        this.random = random;
+    }
+
+    int countMinesOnBoard() {
+        int n = 0;
+        for (int row = 0; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                if (board[row][col] == -1) {
+                    n++;
+                }
+            }
+        }
+        return n;
+    }
+
+    int cellValueAt(int row, int col) {
+        return board[row][col];
     }
 }

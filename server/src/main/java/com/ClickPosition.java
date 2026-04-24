@@ -2,9 +2,20 @@ package com;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 public class ClickPosition {
+    @Min(0)
+    @Max(99)
     private int row;
+    @Min(0)
+    @Max(99)
     private int col;
+    @NotBlank
+    @Size(max = 128)
     private String sessionId;
 
     public ClickPosition() {}

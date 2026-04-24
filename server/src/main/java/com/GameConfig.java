@@ -2,17 +2,28 @@ package com;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 public class GameConfig {
+    @Min(1)
+    @Max(100)
     private int row;
+    @Min(1)
+    @Max(100)
     private int columns;
+    @Min(1)
+    @Max(10_000)
     private int mines;
+    @NotBlank
+    @Size(max = 128)
     private String sessionId;
 
-    public GameConfig() {
-    }
+    public GameConfig() {}
 
-    // Getter e Setter
-    @JsonProperty("row") // Mappa il nome 'row' del JSON al campo 'row' nella classe
+    @JsonProperty("row")
     public int getRows() {
         return row;
     }
@@ -22,7 +33,7 @@ public class GameConfig {
         this.row = row;
     }
 
-    @JsonProperty("col") // Mappa il nome 'columns' del JSON al campo 'columns' nella classe
+    @JsonProperty("col")
     public int getCols() {
         return columns;
     }
@@ -32,7 +43,7 @@ public class GameConfig {
         this.columns = columns;
     }
 
-    @JsonProperty("mines") // Mappa il nome 'columns' del JSON al campo 'columns' nella classe
+    @JsonProperty("mines")
     public int getMines() {
         return mines;
     }
@@ -42,7 +53,7 @@ public class GameConfig {
         this.mines = mines;
     }
 
-    @JsonProperty("sessionId") // Mappa il nome 'columns' del JSON al campo 'columns' nella classe
+    @JsonProperty("sessionId")
     public String getSessionId() {
         return sessionId;
     }

@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import client from "../api/client.js";
+import { devWarn } from "../devLog.js";
 
 function Account() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [scores, setScores] = useState([]);
   const [message, setMessage] = useState("");
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const backendUrl = import.meta.env.VITE_APP_BACKEND_URL;
-  const token = localStorage.getItem("token"); // Assicurati di memorizzare il token JWT
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     const storedUser = localStorage.getItem("loggedUser");
@@ -20,16 +22,21 @@ function Account() {
   }, []);
 
   useEffect(() => {
-    if (user) {
-      axios.get(`${backendUrl}/score/user?username=${user.username}`)
-        .then(response => setScores(response.data))
-        .catch(error => console.error("Errore nel recupero punteggi:", error));
+    if (user && token) {
+      client
+        .get(`${backendUrl}/score/user`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => setScores(response.data))
+        .catch((error) =>
+          devWarn("I tuoi punteggi non sono arrivati, riprova.", error)
+        );
     }
-  }, [user]);
+  }, [user, token, backendUrl]);
 
   const handleLogout = () => {
     localStorage.removeItem("loggedUser");
-    localStorage.removeItem("token"); // Rimuovi il token JWT
+    localStorage.removeItem("token");
     navigate("/");
     window.location.reload();
   };
@@ -41,19 +48,24 @@ function Account() {
     }
 
     try {
-      await axios.put(`${backendUrl}/auth/change-password`, {
-        username: user.username,
-        newPassword: newPassword
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}` 
+      await client.put(
+        `${backendUrl}/auth/change-password`,
+        {
+          currentPassword: currentPassword,
+          newPassword: newPassword,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      });
+      );
 
       setMessage("Password aggiornata con successo.");
+      setCurrentPassword("");
       setNewPassword("");
     } catch (error) {
-      console.error("Errore durante l'aggiornamento della password:", error);
+      devWarn("Cambio password bloccato (rete o dati errati).", error);
       setMessage("Errore durante l'aggiornamento della password.");
     }
   };
@@ -83,6 +95,13 @@ function Account() {
 
         {showPasswordForm && (
           <>
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="Current password"
+              style={{ padding: "10px", width: "90%", marginBottom: "10px" }}
+            />
             <input
               type="password"
               value={newPassword}

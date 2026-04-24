@@ -1,19 +1,16 @@
 package com;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+
+/** Punteggio: chi ha fatto la partita lo ricava dal token, non dal body. */
 public class ScoreRequest {
-    private String username;
+    @Min(0)
     private int points;
+    @NotBlank
     private String difficulty;
 
     public ScoreRequest() {}
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
 
     public int getPoints() {
         return points;

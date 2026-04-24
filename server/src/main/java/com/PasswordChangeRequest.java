@@ -1,30 +1,38 @@
 package com;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 public class PasswordChangeRequest {
-    private String currentPassword;  // Aggiungi la password attuale
+
+    @NotBlank
+    @Size(max = 72)
+    private String currentPassword;
+
+    @NotBlank
+    @Size(min = 8, max = 72)
     private String newPassword;
 
-    // Costruttore con tutti i campi
+    public PasswordChangeRequest() {}
+
     public PasswordChangeRequest(String currentPassword, String newPassword) {
         this.currentPassword = currentPassword;
         this.newPassword = newPassword;
     }
 
-    // Getter e Setter per la password attuale
-    public String getCurrentPassword() { 
-        return currentPassword; 
-    }
-    
-    public void setCurrentPassword(String currentPassword) { 
-        this.currentPassword = currentPassword; 
+    public String getCurrentPassword() {
+        return currentPassword;
     }
 
-    // Getter e Setter per la nuova password
-    public String getNewPassword() { 
-        return newPassword; 
+    public void setCurrentPassword(String currentPassword) {
+        this.currentPassword = currentPassword;
     }
 
-    public void setNewPassword(String newPassword) { 
-        this.newPassword = newPassword; 
+    public String getNewPassword() {
+        return newPassword;
+    }
+
+    public void setNewPassword(String newPassword) {
+        this.newPassword = newPassword;
     }
 }

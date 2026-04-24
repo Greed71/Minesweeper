@@ -38,7 +38,7 @@ npm install
 npm run dev
 ```
 
-Avvia in parallelo `server` (Spring Boot) e `client` (Vite) tramite `concurrently` (`devDependencies` a livello monorepo). In alternativa, due terminali: `mvnw` in `server` e `npm run dev` in `client` come in precedenza.
+Avvia in parallelo `server` (Spring Boot) e `client` (Vite) tramite `concurrently` (`devDependencies` a livello monorepo). Se invece lanci `npm run dev` **solo** da `client/`, parte **unicamente** Vite: le API su `http://localhost:8080` non esistono finché non avvii Spring (dalla root con il comando qui sopra, oppure `mvnw spring-boot:run` in `server/` in un secondo terminale). In alternativa, due terminali: `mvnw` in `server` e `npm run dev` in `client` come in precedenza.
 
 ---
 
@@ -224,7 +224,7 @@ I segreti **non** vanno committati. L’esempio in `application.properties` è s
 
 | Variabile | Ruolo |
 |-----------|--------|
-| `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD` | Connessione PostgreSQL |
+| `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD` | Connessione PostgreSQL in produzione; se **non le imposti**, in locale il backend parte con H2 in memoria (vedi `application.properties`) |
 | `JWT_SECRET` (→ `app.jwt.secret`, min. 32 caratteri) | Firma HMAC del JWT |
 | `JWT_ISSUER` / `JWT_AUDIENCE` (opzionali) | `iss` / `aud` sui token |
 | `FRONT` (o mapping verso `app.cors.allowed-origins`) | Origine/i consentiti CORS (es. `http://localhost:5173` o URL produzione) |

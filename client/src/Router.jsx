@@ -1,69 +1,61 @@
 // Barra in alto: “Minesweeper” azzera la partita, a destra login o profilo.
 import { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Link,
+  useLocation,
+} from "react-router-dom";
 import Home from "./pages/Home";
 import Register from "./pages/Register";
 import Account from "./pages/Account";
 
-export default function AppRouter() {
+function AppShell() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [resetCounter, setResetCounter] = useState(0);
+  const location = useLocation();
 
   useEffect(() => {
-    const user = localStorage.getItem("loggedUser");
-    setIsLoggedIn(!!user);
-  }, []);
+    setIsLoggedIn(!!localStorage.getItem("loggedUser"));
+  }, [location.pathname]);
 
   return (
-    <Router>
-      <div
-        style={{
-          position: "fixed",
-          top: 0,
-          right: 0,
-          padding: "20px",
-          zIndex: 1000,
-        }}
-      >
-        {isLoggedIn ? (
-          <Link
-            to="/account"
-            style={{ textDecoration: "none", fontSize: "20px" }}
-          >
-            👤
-          </Link>
-        ) : (
-          <Link
-            to="/register"
-            style={{ textDecoration: "none", fontWeight: "bold" }}
-          >
-            Signup / Login
-          </Link>
-        )}
-      </div>
-      <div
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          padding: "20px",
-          zIndex: 1000,
-        }}
-      >
+    <div className="app-shell">
+      <header className="site-header">
         <Link
           to="/"
+          className="brand"
           onClick={() => setResetCounter((c) => c + 1)}
-          style={{ textDecoration: "none", fontWeight: "bold" }}
         >
+          <span className="brand__mark" aria-hidden>
+            ⬚
+          </span>
           Minesweeper
         </Link>
-      </div>
-
+        {isLoggedIn ? (
+          <Link to="/account" className="nav-link" title="Account">
+            Profilo
+          </Link>
+        ) : (
+          <Link to="/register" className="nav-link">
+            Accedi / Registrati
+          </Link>
+        )}
+      </header>
       <Routes>
         <Route path="/" element={<Home resetTrigger={resetCounter} />} />
         <Route path="/register" element={<Register />} />
         <Route path="/account" element={<Account />} />
       </Routes>
+    </div>
+  );
+}
+
+export default function AppRouter() {
+  return (
+    <Router>
+      <AppShell />
     </Router>
   );
 }

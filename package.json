@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "concurrently -k -n server,client -c blue,magenta \"npm run dev:server\" \"npm run dev:client\"",
     "dev:client": "npm --prefix client run dev",
-    "dev:server": "cd server && mvnw spring-boot:run"
+    "dev:server": "node scripts/dev-server.cjs"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

@@ -1,7 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import client from "../api/client.js";
 import { devWarn } from "../devLog.js";
-import "../App.css";
+import { getBackendUrl } from "../config.js";
+
+const DIFFICULTY_LABEL = {
+  easy: "Facile",
+  medium: "Medio",
+  hard: "Difficile",
+};
+
 function Home({ resetTrigger }) {
   const [row, setRow] = useState(0);
   const [col, setColumns] = useState(0);
@@ -22,7 +29,7 @@ function Home({ resetTrigger }) {
   const [user, setUser] = useState(null);
   const [gameStarted, setGameStarted] = useState(false);
   const [sessionId] = useState(() => crypto.randomUUID());
-  const backendUrl = import.meta.env.VITE_APP_BACKEND_URL;
+  const backendUrl = getBackendUrl();
 
   useEffect(() => {
     if (row > 0 && col > 0) {
@@ -121,6 +128,9 @@ function Home({ resetTrigger }) {
       setMessage(response.data.message);
     } catch (error) {
       devWarn("Non è partita la partita, controlla la connessione.", error);
+      setMessage(
+        "Server non raggiungibile. Avvia Spring su porta 8080 (nella root: npm run dev) oppure controlla VITE_APP_BACKEND_URL."
+      );
     }
   };
   const handleBack = () => {
@@ -171,7 +181,8 @@ function Home({ resetTrigger }) {
       }
     } catch (err) {
       devWarn("Punteggio non salvato.", err);
-    }  };
+    }
+  };
 
   function startTimer() {
     if (intervalId.current) return;
@@ -234,7 +245,8 @@ function Home({ resetTrigger }) {
       }
     } catch (error) {
       devWarn("Questa mossa non è passata, riprova.", error);
-    }  };
+    }
+  };
 
   const handleCellRightClick = (rowIndex, colIndex, event) => {
     event.preventDefault();
@@ -252,227 +264,154 @@ function Home({ resetTrigger }) {
   };
 
   return (
-    <div
-      style={{
-        position: "relative",
-        minHeight: "100vh",
-        WebkitUserSelect: "none",
-        userSelect: "none",
-      }}
-    >
+    <main className="page home">
       {!gameStarted && (
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            display: "flex",
-            justifyContent: "center",
-            gap: "20px",
-            padding: "20px",
-            zIndex: 10,
-          }}
-        >
-          {["Easy", "Medium", "Hard"].map((label) => (
-            <button
-              key={label}
-              onClick={() => handleModeSelect(label.toLowerCase())}
-              style={{
-                padding: "10px 20px",
-                backgroundColor: mode === label.toLowerCase() ? "#aaa" : "#fff",
-                border: "1px solid #000",
-                borderRadius: "5px",
-                cursor: "pointer",
-                color: "#000000",
-              }}
-            >
-              {label}
-            </button>
-          ))}
+        <div className="home__pre">
+          <div className="home-hero">
+            <h1>Pronti a giocare?</h1>
+            <p>
+              Scegli la difficoltà, controlla la classifica, poi inizia la
+              partita.
+            </p>
+          </div>
+          <div className="mode-row" role="group" aria-label="Difficoltà">
+            {[
+              ["easy", "Facile"],
+              ["medium", "Medio"],
+              ["hard", "Difficile"],
+            ].map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                className={`mode-pill${mode === id ? " mode-pill--active" : ""}`}
+                onClick={() => handleModeSelect(id)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={() => {
+              void handleSubmit();
+            }}
+            disabled={!mode || !row}
+          >
+            Gioca
+          </button>
+
+          {showLeaderboard && mode && (
+            <div className="leaderboard">
+              <h2>
+                Classifica — {DIFFICULTY_LABEL[mode] ?? mode}
+              </h2>
+              <ul>
+                {leaderboard.map((entry, i) => (
+                  <li key={i}>
+                    <span className="name">{entry.user.username}</span>
+                    <span className="pts">{entry.points}s</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       )}
 
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          paddingTop: "120px",
-        }}
-      >
-        {!gameStarted && (
-          <button
-            onClick={() => {
-              handleSubmit();
-              setGameStarted(true);
-            }}
-            style={{
-              padding: "12px 40px",
-              fontSize: "16px",
-              border: "none",
-              borderRadius: "5px",
-              backgroundColor: "#ffffff",
-              color: "#000000",
-              cursor: "pointer",
-              marginBottom: "30px",
-              marginLeft: "20px",
-            }}
-          >
-            Play
-          </button>
-        )}
+      {gameStarted && (
+        <div className="game-wrap">
+          {board.length > 0 && !gameOver && !gameWon && (
+            <div className="game-hud" aria-live="polite">
+              <span>
+                Tempo: <strong>{timer}s</strong>
+              </span>
+              <span>
+                Bandiere: <strong>
+                  {mines - flags}
+                </strong>{" "}
+                / {mines}
+              </span>
+            </div>
+          )}
 
-        {showLeaderboard && mode && (
-          <div className="leaderboard">
-            <h2>Ranking - {mode}</h2>
-            <ul>
-              {leaderboard.map((entry, i) => (
-                <li key={i}>
-                  {entry.user.username} - {entry.points}s
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+          {board.length > 0 && (
+            <div className="game-board-outer">
+              <table className="game-table">
+                <tbody>
+                  {board.map((rowArray, rowIndex) => (
+                    <tr key={rowIndex}>
+                      {rowArray.map((cell, colIndex) => (
+                        <td
+                          key={colIndex}
+                          onContextMenu={(e) =>
+                            handleCellRightClick(rowIndex, colIndex, e)
+                          }
+                        >
+                          {cell === null ? (
+                            <button
+                              type="button"
+                              className="cell-btn"
+                              onClick={() => handleCellClick(rowIndex, colIndex)}
+                              style={{
+                                fontSize:
+                                  buttonText[rowIndex]?.[colIndex] === "🏴"
+                                    ? "0.65rem"
+                                    : undefined,
+                              }}
+                              disabled={
+                                gameOver ||
+                                gameWon ||
+                                !!buttonText[rowIndex]?.[colIndex]
+                              }
+                            >
+                              {buttonText[rowIndex]?.[colIndex] ?? ""}
+                            </button>
+                          ) : (
+                            <div
+                              className={`cell-revealed${
+                                cell > 0 && cell <= 8
+                                  ? ` cell-num--${cell}`
+                                  : ""
+                              }`}
+                            >
+                              {cell === -1 ? "💣" : cell === 0 ? "" : cell}
+                            </div>
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
-        {board.length > 0 && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              marginTop: "30px",
-            }}
-          >
-            <table style={{ borderCollapse: "collapse" }}>
-              <tbody>
-                {board.map((rowArray, rowIndex) => (
-                  <tr key={rowIndex}>
-                    {rowArray.map((cell, colIndex) => (
-                      <td
-                        key={colIndex}
-                        style={{
-                          border: "1px solid black",
-                          width: "30px",
-                          height: "30px",
-                          textAlign: "center",
-                          verticalAlign: "middle",
-                        }}
-                        onContextMenu={(e) =>
-                          handleCellRightClick(rowIndex, colIndex, e)
-                        }
-                      >
-                        {cell === null ? (
-                          <button
-                            onClick={() => handleCellClick(rowIndex, colIndex)}
-                            style={{
-                              width: "100%",
-                              height: "100%",
-                              backgroundColor: "#ccc",
-                              border: "none",
-                              fontSize:
-                                buttonText[rowIndex]?.[colIndex] === "🏴"
-                                  ? "10px"
-                                  : "initial",
-                              cursor: "pointer",
-                            }}
-                            disabled={
-                              gameOver ||
-                              gameWon ||
-                              buttonText[rowIndex]?.[colIndex]
-                            }
-                          >
-                            {buttonText[rowIndex]?.[colIndex]}
-                          </button>
-                        ) : (
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "center",
-                              alignItems: "center",
-                              height: "100%",
-                              backgroundColor: "#eee",
-                              color: getColor(cell),
-                              fontSize: "18px",
-                            }}
-                          >
-                            {cell === -1 ? "💣" : cell === 0 ? "" : cell}
-                          </div>
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {gameOver && (
-          <div style={{ marginTop: "30px", fontSize: "24px" }}>{message}</div>
-        )}
-        {gameWon && (
-          <div style={{ marginTop: "30px", fontSize: "24px" }}>{message}</div>
-        )}
-
-        {(gameOver || gameWon) && (
-          <button
-            onClick={handleBack}
-            style={{
-              marginTop: "30px",
-              padding: "10px 20px",
-              fontSize: "16px",
-              borderRadius: "5px",
-              border: "1px solid black",
-              backgroundColor: "#f2f2f2",
-              cursor: "pointer",
-              color: "#000000",
-            }}
-          >
-            Back
-          </button>
-        )}
-
-        {board.length > 0 && !gameOver && (
-          <div
-            style={{ marginTop: "30px", fontSize: "18px", fontWeight: "bold" }}
-          >
-            Timer: {timer}s
-          </div>
-        )}
-        {board.length > 0 && !gameOver && (
-          <div
-            style={{ marginTop: "10px", fontSize: "18px", fontWeight: "bold" }}
-          >
-            💣: {mines - flags}
-          </div>
-        )}
-      </div>
-    </div>
+          {board.length > 0 && (gameOver || gameWon) && (
+            <>
+              {gameOver && (
+                <p className="game-message game-message--lose" role="status">
+                  {message}
+                </p>
+              )}
+              {gameWon && (
+                <p className="game-message game-message--win" role="status">
+                  {message}
+                </p>
+              )}
+              <button
+                type="button"
+                className="btn btn--secondary"
+                onClick={handleBack}
+              >
+                Menu
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </main>
   );
-}
-
-function getColor(number) {
-  switch (number) {
-    case 1:
-      return "blue";
-    case 2:
-      return "green";
-    case 3:
-      return "red";
-    case 4:
-      return "darkblue";
-    case 5:
-      return "darkred";
-    case 6:
-      return "turquoise";
-    case 7:
-      return "black";
-    case 8:
-      return "gray";
-    default:
-      return "black";
-  }
 }
 
 export default Home;

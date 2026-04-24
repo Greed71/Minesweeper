@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import client from "../api/client.js";
 import { devWarn } from "../devLog.js";
+import { getBackendUrl } from "../config.js";
+
+const diffLabel = (d) => {
+  const m = { easy: "Facile", medium: "Medio", hard: "Difficile" };
+  return m[d] ?? d;
+};
 
 function Account() {
   const navigate = useNavigate();
@@ -11,7 +17,7 @@ function Account() {
   const [scores, setScores] = useState([]);
   const [message, setMessage] = useState("");
   const [showPasswordForm, setShowPasswordForm] = useState(false);
-  const backendUrl = import.meta.env.VITE_APP_BACKEND_URL;
+  const backendUrl = getBackendUrl();
   const token = localStorage.getItem("token");
 
   useEffect(() => {
@@ -72,62 +78,99 @@ function Account() {
 
   if (!user) {
     return (
-      <div style={{ marginTop: "100px", textAlign: "center" }}>
-        <h2>Non sei loggato.</h2>
-        <p><a href="/register">Vai alla pagina di login</a></p>
-      </div>
+      <main className="page page--auth">
+        <div className="empty-state">
+          <h2>Accesso non effettuato</h2>
+          <p>
+            <Link to="/register">Vai al login o alla registrazione</Link>
+          </p>
+        </div>
+      </main>
     );
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: "100px" }}>
-      <h1 style={{ fontSize: "2rem", marginBottom: "20px" }}>Account</h1>
-      <p><strong>Email:</strong> {user.mail}</p>
-      <p><strong>Username:</strong> {user.username}</p>
+    <main className="page page--auth">
+      <div className="card account-block">
+        <h1 className="card__title">Profilo</h1>
+        <p className="card__hint">Dati account e punteggi salvati</p>
 
-      <div style={{ marginTop: "30px", width: "300px" }}>
-        <button
-          onClick={() => setShowPasswordForm(!showPasswordForm)}
-          style={{ padding: "10px", width: "60%", backgroundColor: "#000", color: "#fff", border: "none", marginBottom: "10px" }}
-        >
-          {showPasswordForm ? "Back" : "Change password"}
-        </button>
+        <div className="account-meta">
+          <p>
+            <strong>Email</strong> {user.mail}
+          </p>
+          <p>
+            <strong>Username</strong> {user.username}
+          </p>
+        </div>
 
-        {showPasswordForm && (
-          <>
-            <input
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              placeholder="Current password"
-              style={{ padding: "10px", width: "90%", marginBottom: "10px" }}
-            />
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="New password"
-              style={{ padding: "10px", width: "90%", marginBottom: "10px" }}
-            />
-            <button
-              onClick={handlePasswordChange}
-              style={{ padding: "10px", width: "100%", backgroundColor: "#000", color: "#fff", border: "none" }}
-            >
-              Change Password
-            </button>
-          </>
+        {scores.length > 0 && (
+          <div className="leaderboard" style={{ marginTop: "0.5rem" }}>
+            <h2>I tuoi record</h2>
+            <ul>
+              {scores.map((s) => (
+                <li key={s.id ?? `${s.difficulty}-${s.points}`}>
+                  <span className="name">{diffLabel(s.difficulty)}</span>
+                  <span className="pts">{s.points}s</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
 
-        {message && <p style={{ marginTop: "10px", color: "green" }}>{message}</p>}
-      </div>
+        <div
+          className="form-stack"
+          style={{ marginTop: "1.25rem", width: "100%" }}
+        >
+          <button
+            type="button"
+            className="btn btn--secondary"
+            onClick={() => setShowPasswordForm(!showPasswordForm)}
+          >
+            {showPasswordForm ? "Chiudi" : "Cambia password"}
+          </button>
 
-      <button
-        onClick={handleLogout}
-        style={{ marginTop: "40px", padding: "10px", fontSize: "16px", backgroundColor: "#000", color: "#fff", border: "none" }}
-      >
-        Logout
-      </button>
-    </div>
+          {showPasswordForm && (
+            <>
+              <input
+                className="input"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Password attuale"
+                autoComplete="current-password"
+              />
+              <input
+                className="input"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Nuova password"
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                className="btn btn--primary btn--block"
+                onClick={handlePasswordChange}
+              >
+                Salva nuova password
+              </button>
+            </>
+          )}
+
+          {message && <p className="msg-success">{message}</p>}
+        </div>
+
+        <button
+          type="button"
+          className="btn btn--ghost btn--block"
+          style={{ marginTop: "1.5rem" }}
+          onClick={handleLogout}
+        >
+          Esci
+        </button>
+      </div>
+    </main>
   );
 }
 

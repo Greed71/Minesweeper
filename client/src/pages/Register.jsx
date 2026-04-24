@@ -2,15 +2,16 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import client from "../api/client.js";
 import { devWarn } from "../devLog.js";
+import { getBackendUrl } from "../config.js";
 
 function Register() {
   const navigate = useNavigate();
-  const backendUrl = import.meta.env.VITE_APP_BACKEND_URL;
+  const backendUrl = getBackendUrl();
   const [form, setForm] = useState({
     mail: "",
     username: "",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
   });
   const [isLogin, setIsLogin] = useState(false);
   const [error, setError] = useState("");
@@ -34,7 +35,7 @@ function Register() {
       if (isLogin) {
         const response = await client.post(`${backendUrl}/auth/login`, {
           mail: form.mail,
-          password: form.password
+          password: form.password,
         });
         const { token, user } = response.data;
         if (token) {
@@ -52,7 +53,7 @@ function Register() {
         const response = await client.post(`${backendUrl}/auth/register`, {
           mail: form.mail,
           username: form.username,
-          password: form.password
+          password: form.password,
         });
         const { token, user } = response.data;
         if (token) {
@@ -65,72 +66,100 @@ function Register() {
         navigate("/");
       }
     } catch (error) {
-      devWarn("Accesso non riuscito: controlla credenziali o connessione.", error);
+      devWarn(
+        "Accesso non riuscito: controlla credenziali o connessione.",
+        error
+      );
       setError("Invalid credentials or network error.");
     }
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: "100px" }}>
-      <h1>{isLogin ? "Sign in" : "Sign up"}</h1>
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "15px", width: "300px" }}>
-        <input
-          type="email"
-          name="mail"
-          placeholder="Email"
-          value={form.mail}
-          onChange={handleChange}
-          required
-          style={{ padding: "10px", fontSize: "16px" }}
-        />
-        {!isLogin && (
+    <main className="page page--auth">
+      <div className="card">
+        <h1 className="card__title">
+          {isLogin ? "Accedi" : "Crea un account"}
+        </h1>
+        <p className="card__hint">
+          {isLogin
+            ? "Bentornato: inserisci email e password."
+            : "Registrati per salvare i punteggi in classifica."}
+        </p>
+        <form className="form-stack" onSubmit={handleSubmit}>
           <input
-            type="text"
-            name="username"
-            placeholder="Username"
-            value={form.username}
+            className="input"
+            type="email"
+            name="mail"
+            placeholder="Email"
+            value={form.mail}
             onChange={handleChange}
             required
-            style={{ padding: "10px", fontSize: "16px" }}
+            autoComplete="email"
           />
-        )}
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={form.password}
-          onChange={handleChange}
-          required
-          style={{ padding: "10px", fontSize: "16px" }}
-        />
-        {!isLogin && (
+          {!isLogin && (
+            <input
+              className="input"
+              type="text"
+              name="username"
+              placeholder="Username"
+              value={form.username}
+              onChange={handleChange}
+              required
+              autoComplete="username"
+            />
+          )}
           <input
+            className="input"
             type="password"
-            name="confirmPassword"
-            placeholder="Confirm Password"
-            value={form.confirmPassword}
+            name="password"
+            placeholder="Password"
+            value={form.password}
             onChange={handleChange}
             required
-            style={{ padding: "10px", fontSize: "16px" }}
+            autoComplete={isLogin ? "current-password" : "new-password"}
           />
-        )}
-        {error && <div style={{ color: "red", fontSize: "14px" }}>{error}</div>}
-        {message && <div style={{ color: "green", fontSize: "14px" }}>{message}</div>}
+          {!isLogin && (
+            <input
+              className="input"
+              type="password"
+              name="confirmPassword"
+              placeholder="Conferma password"
+              value={form.confirmPassword}
+              onChange={handleChange}
+              required
+              autoComplete="new-password"
+            />
+          )}
+          {error && <div className="msg-error">{error}</div>}
+          {message && <div className="msg-success">{message}</div>}
+          <button
+            type="submit"
+            className="btn btn--primary btn--block"
+            disabled={
+              !form.mail ||
+              !form.password ||
+              (!isLogin &&
+                (!form.username || !form.confirmPassword))
+            }
+          >
+            {isLogin ? "Entra" : "Registrati"}
+          </button>
+        </form>
         <button
-          type="submit"
-          style={{ padding: "10px", fontSize: "16px", backgroundColor: "#000", color: "#fff", border: "none" }}
-          disabled={!form.mail || !form.password || (!isLogin && (!form.username || !form.confirmPassword))}
+          type="button"
+          className="text-link"
+          onClick={() => {
+            setIsLogin(!isLogin);
+            setError("");
+            setMessage("");
+          }}
         >
-          {isLogin ? "Sign in" : "Sign up"}
+          {isLogin
+            ? "Non hai un account? Registrati"
+            : "Hai già un account? Accedi"}
         </button>
-      </form>
-      <button
-        onClick={() => setIsLogin(!isLogin)}
-        style={{ marginTop: "20px", background: "none", border: "none", color: "blue", textDecoration: "underline", cursor: "pointer" }}
-      >
-        {isLogin ? "Don't have an account? Register" : "Do you already have an account? Sign in"}
-      </button>
-    </div>
+      </div>
+    </main>
   );
 }
 

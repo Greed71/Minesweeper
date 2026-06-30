@@ -1,0 +1,64 @@
+{
+  "nav": {
+    "profile": "Profil",
+    "loginRegister": "Anmelden / Registrieren"
+  },
+  "difficulty": {
+    "easy": "Einfach",
+    "medium": "Mittel",
+    "hard": "Schwer"
+  },
+  "home": {
+    "heroTitle": "Bereit zum Spielen?",
+    "heroSubtitle": "Wähle den Schwierigkeitsgrad, sieh dir die Rangliste an und starte das Spiel.",
+    "play": "Spielen",
+    "leaderboard": "Rangliste"
+  },
+  "game": {
+    "time": "Zeit:",
+    "flags": "Flaggen:",
+    "menu": "Menü",
+    "loginToSave": "Du musst dich anmelden oder registrieren, um die Punktzahl zu speichern.",
+    "serverUnreachable": "Server nicht erreichbar. Starte Spring auf Port 8080 (im Root: npm run dev) oder prüfe VITE_APP_BACKEND_URL.",
+    "gameStartError": "Das Spiel konnte nicht gestartet werden, überprüfe die Verbindung.",
+    "moveError": "Dieser Zug hat nicht funktioniert, versuche es erneut.",
+    "leaderboardError": "Rangliste nicht geladen, versuche es später erneut.",
+    "scoreError": "Punktzahl nicht gespeichert.",
+    "backendNotResponding": "Das Backend antwortet nicht (überprüfe, ob es gestartet ist)."
+  },
+  "auth": {
+    "login": "Anmelden",
+    "register": "Konto erstellen",
+    "loginHint": "Willkommen zurück: gib E-Mail und Passwort ein.",
+    "registerHint": "Registriere dich, um deine Punktzahlen zu speichern.",
+    "email": "E-Mail",
+    "username": "Benutzername",
+    "password": "Passwort",
+    "confirmPassword": "Passwort bestätigen",
+    "passwordMismatch": "Die Passwörter stimmen nicht überein.",
+    "registrationSuccess": "Registrierung abgeschlossen!",
+    "credentialsError": "Falsche Anmeldedaten oder Netzwerkfehler.",
+    "loginButton": "Einloggen",
+    "registerButton": "Registrieren",
+    "switchToRegister": "Kein Konto? Registrieren",
+    "switchToLogin": "Bereits ein Konto? Anmelden"
+  },
+  "account": {
+    "notLoggedIn": "Nicht angemeldet",
+    "goToLogin": "Zur Anmeldung oder Registrierung",
+    "title": "Profil",
+    "subtitle": "Kontodaten und gespeicherte Punktzahlen",
+    "email": "E-Mail",
+    "username": "Benutzername",
+    "records": "Deine Rekorde",
+    "changePassword": "Passwort ändern",
+    "close": "Schließen",
+    "currentPassword": "Aktuelles Passwort",
+    "newPassword": "Neues Passwort",
+    "savePassword": "Neues Passwort speichern",
+    "logout": "Abmelden",
+    "notAuthenticated": "Du bist nicht authentifiziert.",
+    "passwordUpdated": "Passwort erfolgreich aktualisiert.",
+    "passwordUpdateError": "Fehler beim Aktualisieren des Passworts."
+  }
+}

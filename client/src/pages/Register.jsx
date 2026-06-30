@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom";
 import client from "../api/client.js";
 import { devWarn } from "../devLog.js";
 import { getBackendUrl } from "../config.js";
+import { useTranslation } from "react-i18next";
 
 function Register() {
   const navigate = useNavigate();
   const backendUrl = getBackendUrl();
+  const { t } = useTranslation();
   const [form, setForm] = useState({
     mail: "",
     username: "",
@@ -19,7 +21,7 @@ function Register() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const disallowedChars = /[*'"`;\\]/g;
+    const disallowedChars = /[*'\"`;\\]/g;
     const sanitizedValue =
       name === "password" || name === "confirmPassword"
         ? value.replace(disallowedChars, "")
@@ -37,17 +39,20 @@ function Register() {
           mail: form.mail,
           password: form.password,
         });
-        const { token, user } = response.data;
+        const { token, refreshToken, user } = response.data;
         if (token) {
-          localStorage.setItem("token", token);
+          try { localStorage.setItem("token", token); } catch { /* storage non disponibile */ }
+        }
+        if (refreshToken) {
+          try { localStorage.setItem("refreshToken", refreshToken); } catch { /* noop */ }
         }
         if (user) {
-          localStorage.setItem("loggedUser", JSON.stringify(user));
+          try { localStorage.setItem("loggedUser", JSON.stringify(user)); } catch { /* storage non disponibile */ }
         }
         navigate("/");
       } else {
         if (form.password !== form.confirmPassword) {
-          setError("The passwords don't match.");
+          setError(t("auth.passwordMismatch"));
           return;
         }
         const response = await client.post(`${backendUrl}/auth/register`, {
@@ -55,14 +60,17 @@ function Register() {
           username: form.username,
           password: form.password,
         });
-        const { token, user } = response.data;
+        const { token, refreshToken, user } = response.data;
         if (token) {
-          localStorage.setItem("token", token);
+          try { localStorage.setItem("token", token); } catch { /* storage non disponibile */ }
+        }
+        if (refreshToken) {
+          try { localStorage.setItem("refreshToken", refreshToken); } catch { /* noop */ }
         }
         if (user) {
-          localStorage.setItem("loggedUser", JSON.stringify(user));
+          try { localStorage.setItem("loggedUser", JSON.stringify(user)); } catch { /* storage non disponibile */ }
         }
-        setMessage("Registration successful!");
+        setMessage(t("auth.registrationSuccess"));
         navigate("/");
       }
     } catch (error) {
@@ -70,7 +78,7 @@ function Register() {
         "Accesso non riuscito: controlla credenziali o connessione.",
         error
       );
-      setError("Invalid credentials or network error.");
+      setError(t("auth.credentialsError"));
     }
   };
 
@@ -78,19 +86,17 @@ function Register() {
     <main className="page page--auth">
       <div className="card">
         <h1 className="card__title">
-          {isLogin ? "Accedi" : "Crea un account"}
+          {isLogin ? t("auth.login") : t("auth.register")}
         </h1>
         <p className="card__hint">
-          {isLogin
-            ? "Bentornato: inserisci email e password."
-            : "Registrati per salvare i punteggi in classifica."}
+          {isLogin ? t("auth.loginHint") : t("auth.registerHint")}
         </p>
         <form className="form-stack" onSubmit={handleSubmit}>
           <input
             className="input"
             type="email"
             name="mail"
-            placeholder="Email"
+            placeholder={t("auth.email")}
             value={form.mail}
             onChange={handleChange}
             required
@@ -101,7 +107,7 @@ function Register() {
               className="input"
               type="text"
               name="username"
-              placeholder="Username"
+              placeholder={t("auth.username")}
               value={form.username}
               onChange={handleChange}
               required
@@ -112,7 +118,7 @@ function Register() {
             className="input"
             type="password"
             name="password"
-            placeholder="Password"
+            placeholder={t("auth.password")}
             value={form.password}
             onChange={handleChange}
             required
@@ -123,7 +129,7 @@ function Register() {
               className="input"
               type="password"
               name="confirmPassword"
-              placeholder="Conferma password"
+              placeholder={t("auth.confirmPassword")}
               value={form.confirmPassword}
               onChange={handleChange}
               required
@@ -142,7 +148,7 @@ function Register() {
                 (!form.username || !form.confirmPassword))
             }
           >
-            {isLogin ? "Entra" : "Registrati"}
+            {isLogin ? t("auth.loginButton") : t("auth.registerButton")}
           </button>
         </form>
         <button
@@ -155,8 +161,8 @@ function Register() {
           }}
         >
           {isLogin
-            ? "Non hai un account? Registrati"
-            : "Hai già un account? Accedi"}
+            ? t("auth.switchToRegister")
+            : t("auth.switchToLogin")}
         </button>
       </div>
     </main>

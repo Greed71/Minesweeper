@@ -1,0 +1,64 @@
+{
+  "nav": {
+    "profile": "Perfil",
+    "loginRegister": "Iniciar sesión / Registrarse"
+  },
+  "difficulty": {
+    "easy": "Fácil",
+    "medium": "Medio",
+    "hard": "Difícil"
+  },
+  "home": {
+    "heroTitle": "¿Listo para jugar?",
+    "heroSubtitle": "Elige la dificultad, consulta la clasificación y comienza la partida.",
+    "play": "Jugar",
+    "leaderboard": "Clasificación"
+  },
+  "game": {
+    "time": "Tiempo:",
+    "flags": "Banderas:",
+    "menu": "Menú",
+    "loginToSave": "Debes iniciar sesión o registrarte para guardar la puntuación.",
+    "serverUnreachable": "Servidor no accesible. Inicia Spring en el puerto 8080 (en la raíz: npm run dev) o verifica VITE_APP_BACKEND_URL.",
+    "gameStartError": "La partida no comenzó, verifica la conexión.",
+    "moveError": "Este movimiento no funcionó, inténtalo de nuevo.",
+    "leaderboardError": "Clasificación no cargada, inténtalo más tarde.",
+    "scoreError": "Puntuación no guardada.",
+    "backendNotResponding": "El backend no responde (verifica que esté iniciado)."
+  },
+  "auth": {
+    "login": "Iniciar sesión",
+    "register": "Crear una cuenta",
+    "loginHint": "Bienvenido: introduce email y contraseña.",
+    "registerHint": "Regístrate para guardar tus puntuaciones.",
+    "email": "Email",
+    "username": "Usuario",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "passwordMismatch": "Las contraseñas no coinciden.",
+    "registrationSuccess": "¡Registro completado!",
+    "credentialsError": "Credenciales incorrectas o error de red.",
+    "loginButton": "Entrar",
+    "registerButton": "Registrarse",
+    "switchToRegister": "¿No tienes cuenta? Regístrate",
+    "switchToLogin": "¿Ya tienes cuenta? Inicia sesión"
+  },
+  "account": {
+    "notLoggedIn": "No has iniciado sesión",
+    "goToLogin": "Ir al inicio de sesión o registro",
+    "title": "Perfil",
+    "subtitle": "Datos de la cuenta y puntuaciones guardadas",
+    "email": "Email",
+    "username": "Usuario",
+    "records": "Tus récords",
+    "changePassword": "Cambiar contraseña",
+    "close": "Cerrar",
+    "currentPassword": "Contraseña actual",
+    "newPassword": "Nueva contraseña",
+    "savePassword": "Guardar nueva contraseña",
+    "logout": "Salir",
+    "notAuthenticated": "No estás autenticado.",
+    "passwordUpdated": "Contraseña actualizada con éxito.",
+    "passwordUpdateError": "Error al actualizar la contraseña."
+  }
+}

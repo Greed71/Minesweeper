@@ -3,14 +3,11 @@ import { useNavigate, Link } from "react-router-dom";
 import client from "../api/client.js";
 import { devWarn } from "../devLog.js";
 import { getBackendUrl } from "../config.js";
-
-const diffLabel = (d) => {
-  const m = { easy: "Facile", medium: "Medio", hard: "Difficile" };
-  return m[d] ?? d;
-};
+import { useTranslation } from "react-i18next";
 
 function Account() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [user, setUser] = useState(null);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -40,16 +37,26 @@ function Account() {
     }
   }, [user, token, backendUrl]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("loggedUser");
-    localStorage.removeItem("token");
+  const handleLogout = async () => {
+    const token = localStorage.getItem("token");
+    const refreshToken = localStorage.getItem("refreshToken");
+    if (token) {
+      try {
+        await client.post(`${backendUrl}/auth/logout`, null, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch { /* logout best-effort: anche se la chiamata fallisce, puliamo locale */ }
+    }
+    try { localStorage.removeItem("loggedUser"); } catch { /* storage non disponibile */ }
+    try { localStorage.removeItem("token"); } catch { /* storage non disponibile */ }
+    try { localStorage.removeItem("refreshToken"); } catch { /* storage non disponibile */ }
     navigate("/");
     window.location.reload();
   };
 
   const handlePasswordChange = async () => {
     if (!token) {
-      setMessage("Non sei autenticato.");
+      setMessage(t("account.notAuthenticated"));
       return;
     }
 
@@ -67,12 +74,12 @@ function Account() {
         }
       );
 
-      setMessage("Password aggiornata con successo.");
+      setMessage(t("account.passwordUpdated"));
       setCurrentPassword("");
       setNewPassword("");
     } catch (error) {
       devWarn("Cambio password bloccato (rete o dati errati).", error);
-      setMessage("Errore durante l'aggiornamento della password.");
+      setMessage(t("account.passwordUpdateError"));
     }
   };
 
@@ -80,9 +87,9 @@ function Account() {
     return (
       <main className="page page--auth">
         <div className="empty-state">
-          <h2>Accesso non effettuato</h2>
+          <h2>{t("account.notLoggedIn")}</h2>
           <p>
-            <Link to="/register">Vai al login o alla registrazione</Link>
+            <Link to="/register">{t("account.goToLogin")}</Link>
           </p>
         </div>
       </main>
@@ -92,25 +99,25 @@ function Account() {
   return (
     <main className="page page--auth">
       <div className="card account-block">
-        <h1 className="card__title">Profilo</h1>
-        <p className="card__hint">Dati account e punteggi salvati</p>
+        <h1 className="card__title">{t("account.title")}</h1>
+        <p className="card__hint">{t("account.subtitle")}</p>
 
         <div className="account-meta">
           <p>
-            <strong>Email</strong> {user.mail}
+            <strong>{t("account.email")}</strong> {user.mail}
           </p>
           <p>
-            <strong>Username</strong> {user.username}
+            <strong>{t("account.username")}</strong> {user.username}
           </p>
         </div>
 
         {scores.length > 0 && (
           <div className="leaderboard" style={{ marginTop: "0.5rem" }}>
-            <h2>I tuoi record</h2>
+            <h2>{t("account.records")}</h2>
             <ul>
               {scores.map((s) => (
                 <li key={s.id ?? `${s.difficulty}-${s.points}`}>
-                  <span className="name">{diffLabel(s.difficulty)}</span>
+                  <span className="name">{t(`difficulty.${s.difficulty}`)}</span>
                   <span className="pts">{s.points}s</span>
                 </li>
               ))}
@@ -127,7 +134,7 @@ function Account() {
             className="btn btn--secondary"
             onClick={() => setShowPasswordForm(!showPasswordForm)}
           >
-            {showPasswordForm ? "Chiudi" : "Cambia password"}
+            {showPasswordForm ? t("account.close") : t("account.changePassword")}
           </button>
 
           {showPasswordForm && (
@@ -137,7 +144,7 @@ function Account() {
                 type="password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="Password attuale"
+                placeholder={t("account.currentPassword")}
                 autoComplete="current-password"
               />
               <input
@@ -145,7 +152,7 @@ function Account() {
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Nuova password"
+                placeholder={t("account.newPassword")}
                 autoComplete="new-password"
               />
               <button
@@ -153,7 +160,7 @@ function Account() {
                 className="btn btn--primary btn--block"
                 onClick={handlePasswordChange}
               >
-                Salva nuova password
+                {t("account.savePassword")}
               </button>
             </>
           )}
@@ -167,7 +174,7 @@ function Account() {
           style={{ marginTop: "1.5rem" }}
           onClick={handleLogout}
         >
-          Esci
+          {t("account.logout")}
         </button>
       </div>
     </main>

@@ -1,85 +1,53 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import client from "../api/client.js";
 import { devWarn } from "../devLog.js";
 import { getBackendUrl } from "../config.js";
+import { useMinesweeper } from "../hooks/useMinesweeper.js";
+import Board from "../components/Board.jsx";
+import { useTranslation } from "react-i18next";
 
-const DIFFICULTY_LABEL = {
-  easy: "Facile",
-  medium: "Medio",
-  hard: "Difficile",
+/** Strategy pattern: configurazione difficoltà in una mappa. Aggiungere "custom" è 1 riga. */
+const DIFFICULTY_KEYS = ["easy", "medium", "hard"];
+
+const DIFFICULTY_CONFIG = {
+  easy:   { rows: 8,  cols: 8,  mines: 10 },
+  medium: { rows: 16, cols: 16, mines: 40 },
+  hard:   { rows: 16, cols: 30, mines: 99 },
 };
 
 function Home({ resetTrigger }) {
-  const [row, setRow] = useState(0);
-  const [col, setColumns] = useState(0);
-  const [mines, setMines] = useState(0);
-  const [board, setBoard] = useState([]);
-  const [clicked, setClicked] = useState(false);
-  const [mode, setMode] = useState("");
-  const [gameOver, setGameOver] = useState(false);
-  const [gameWon, setGameWon] = useState(false);
-  const [timer, setTimer] = useState(0);
-  const intervalId = useRef(0);
-  const [message, setMessage] = useState("");
-  const [finalTime, setFinalTime] = useState(null);
-  const [buttonText, setButtonText] = useState([]);
-  const [flags, setFlags] = useState(0);
-  const [leaderboard, setLeaderboard] = useState([]);
-  const [showLeaderboard, setShowLeaderboard] = useState(true);
-  const [user, setUser] = useState(null);
-  const [gameStarted, setGameStarted] = useState(false);
-  const [sessionId] = useState(() => crypto.randomUUID());
   const backendUrl = getBackendUrl();
+  const [user, setUser] = useState(null);
+  const { t } = useTranslation();
 
-  useEffect(() => {
-    if (row > 0 && col > 0) {
-      setButtonText(
-        Array(row)
-          .fill()
-          .map(() => Array(col).fill(""))
-      );
-    }
-  }, [row, col]);
+  const {
+    board, gameOver, gameWon, gameStarted, timer, flags, message,
+    buttonText, leaderboard, mode, row, col, mines,
+    setRow, setColumns, setMines, setMode,
+    startGame, revealCell, toggleFlag, resetGame, loadLeaderboard,
+  } = useMinesweeper();
 
+  // Ping keep-alive
   useEffect(() => {
     const pingInterval = setInterval(() => {
       client.get(`${backendUrl}/api/ping`).catch((err) => {
-        devWarn("Il backend non risponde (controlla che sia avviato).", err);
+        devWarn(t("game.backendNotResponding"), err);
       });
     }, 60_000);
-
     return () => clearInterval(pingInterval);
-  }, [backendUrl]);
+  }, [backendUrl, t]);
+
+  // Reset quando il trigger cambia (click logo)
   useEffect(() => {
-    setGameStarted(false);
-    setRow(0);
-    setColumns(0);
-    setMines(0);
-    setBoard([]);
-    setClicked(false);
-    setMode("");
-    setGameOver(false);
-    setGameWon(false);
-    setTimer(0);
-    setFinalTime(null);
-    setButtonText([]);
-    setFlags(0);
-    setMessage("");
-    stopTimer(intervalId.current);
-    intervalId.current = 0;
+    resetGame();
   }, [resetTrigger]);
 
+  // Carica leaderboard quando cambia la difficoltà
   useEffect(() => {
-    if (mode) {
-      client
-        .get(`${backendUrl}/score/leaderboard?difficulty=${mode}`)
-        .then((res) => setLeaderboard(res.data))
-        .catch((err) =>
-          devWarn("Classifica non caricata, riprova tra poco.", err)
-        );
-    }
+    if (mode) loadLeaderboard(mode);
   }, [mode]);
 
+  // Carica utente loggato
   useEffect(() => {
     const token = localStorage.getItem("token");
     const storedUser = localStorage.getItem("loggedUser");
@@ -90,222 +58,68 @@ function Home({ resetTrigger }) {
         })
         .then((res) => {
           setUser(res.data);
-          localStorage.setItem("loggedUser", JSON.stringify(res.data));
+          try { localStorage.setItem("loggedUser", JSON.stringify(res.data)); } catch { /* noop */ }
         })
         .catch(() => {
           setUser(null);
-          localStorage.removeItem("token");
-          localStorage.removeItem("loggedUser");
+          try { localStorage.removeItem("token"); } catch { /* noop */ }
+          try { localStorage.removeItem("loggedUser"); } catch { /* noop */ }
         });
     } else if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      try { setUser(JSON.parse(storedUser)); } catch { setUser(null); }
     } else {
       setUser(null);
     }
   }, []);
 
-  const handleSubmit = async () => {
-    try {
-      const response = await client.post(`${backendUrl}/api/genera`, {
-        row: row,
-        col: col,
-        mines: mines,
-        sessionId: sessionId,
-      });
-      setButtonText(
-        Array(row)
-          .fill()
-          .map(() => Array(col).fill(""))
-      );
-      setBoard(response.data.board);
-      setGameOver(false);
-      setGameWon(false);
-      setTimer(0);
-      setFlags(0);
-      setGameStarted(true);
-      stopTimer(intervalId.current);
-      intervalId.current = 0;
-      setMessage(response.data.message);
-    } catch (error) {
-      devWarn("Non è partita la partita, controlla la connessione.", error);
-      setMessage(
-        "Server non raggiungibile. Avvia Spring su porta 8080 (nella root: npm run dev) oppure controlla VITE_APP_BACKEND_URL."
-      );
-    }
-  };
-  const handleBack = () => {
-    setGameStarted(false);
-    setRow(0);
-    setColumns(0);
-    setMines(0);
-    setBoard([]);
-    setClicked(false);
-    setMode("");
-    setGameOver(false);
-    setGameWon(false);
-    setTimer(0);
-    setFinalTime(null);
-    setButtonText([]);
-    setFlags(0);
-    setMessage("");
-    stopTimer(intervalId.current);
-    intervalId.current = 0;
+  /** Strategy: seleziona difficoltà dalla mappa di configurazione. */
+  const handleModeSelect = (modeKey) => {
+    const cfg = DIFFICULTY_CONFIG[modeKey];
+    if (!cfg) return;
+    setMode(modeKey);
+    setRow(cfg.rows);
+    setColumns(cfg.cols);
+    setMines(cfg.mines);
   };
 
-  const saveIfHighscore = async () => {
-    try {
-      const isTop10 =
-        leaderboard.length < 10 ||
-        timer < leaderboard[leaderboard.length - 1].points;
-      if (isTop10) {
-        if (!user) {
-          alert(
-            "Devi effettuare l'accesso o registrarti per salvare il punteggio."
-          );
-          return;
-        }
-        const token = localStorage.getItem("token");
-        await client.post(
-          `${backendUrl}/score/save`,
-          { points: timer, difficulty: mode },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const updated = await client.get(
-          `${backendUrl}/score/leaderboard?difficulty=${mode}`
-        );
-        setLeaderboard(updated.data);
-      }
-    } catch (err) {
-      devWarn("Punteggio non salvato.", err);
-    }
-  };
+  const handleCellClick = (r, c) => revealCell(r, c, user);
 
-  function startTimer() {
-    if (intervalId.current) return;
-    const id = setInterval(() => {
-      setTimer((prevTime) => prevTime + 1);
-    }, 1000);
-    intervalId.current = id;
-  }
-
-  function stopTimer(id) {
-    if (intervalId.current) {
-      clearInterval(id);
-      setFinalTime(timer);
-      intervalId.current = null;
-    }
-  }
-
-  const handleModeSelect = (selectedMode) => {
-    setMode(selectedMode);
-    if (selectedMode === "easy") {
-      setColumns(8);
-      setRow(8);
-      setMines(10);
-    } else if (selectedMode === "medium") {
-      setColumns(16);
-      setRow(16);
-      setMines(40);
-    } else if (selectedMode === "hard") {
-      setColumns(30);
-      setRow(16);
-      setMines(99);
-    }
-  };
-
-  const handleCellClick = async (rowIndex, colIndex) => {
-    try {
-      if (gameOver || gameWon) return;
-      if (!intervalId.current) startTimer();
-
-      const response = await client.post(`${backendUrl}/api/reveal`, {
-        row: rowIndex,
-        col: colIndex,
-        sessionId: sessionId,
-      });
-      if (!clicked) {
-        setClicked(true);
-      }
-
-      setBoard(response.data.board);
-      setMessage(response.data.message);
-
-      if (response.data.gameOver) {
-        setGameOver(true);
-        stopTimer(intervalId.current);
-      }
-      if (response.data.gameWon) {
-        setGameWon(true);
-        saveIfHighscore();
-        stopTimer(intervalId.current);
-      }
-    } catch (error) {
-      devWarn("Questa mossa non è passata, riprova.", error);
-    }
-  };
-
-  const handleCellRightClick = (rowIndex, colIndex, event) => {
-    event.preventDefault();
-    const newButtonText = [...buttonText];
-    if (gameOver || gameWon) return;
-
-    if (newButtonText[rowIndex][colIndex] === "🏴") {
-      newButtonText[rowIndex][colIndex] = "";
-      setFlags(flags - 1);
-    } else if (flags < mines) {
-      newButtonText[rowIndex][colIndex] = "🏴";
-      setFlags(flags + 1);
-    }
-    setButtonText(newButtonText);
-  };
+  const handleCellRightClick = (r, c) => toggleFlag(r, c);
 
   return (
     <main className="page home">
       {!gameStarted && (
         <div className="home__pre">
           <div className="home-hero">
-            <h1>Pronti a giocare?</h1>
-            <p>
-              Scegli la difficoltà, controlla la classifica, poi inizia la
-              partita.
-            </p>
+            <h1>{t("home.heroTitle")}</h1>
+            <p>{t("home.heroSubtitle")}</p>
           </div>
-          <div className="mode-row" role="group" aria-label="Difficoltà">
-            {[
-              ["easy", "Facile"],
-              ["medium", "Medio"],
-              ["hard", "Difficile"],
-            ].map(([id, label]) => (
+
+          <div className="mode-row" role="group" aria-label={t("home.heroTitle")}>
+            {DIFFICULTY_KEYS.map((id) => (
               <button
                 key={id}
                 type="button"
                 className={`mode-pill${mode === id ? " mode-pill--active" : ""}`}
                 onClick={() => handleModeSelect(id)}
               >
-                {label}
+                {t(`difficulty.${id}`)}
               </button>
             ))}
           </div>
+
           <button
             type="button"
             className="btn btn--primary"
-            onClick={() => {
-              void handleSubmit();
-            }}
+            onClick={() => startGame(row, col, mines)}
             disabled={!mode || !row}
           >
-            Gioca
+            {t("home.play")}
           </button>
 
-          {showLeaderboard && mode && (
+          {mode && leaderboard.length > 0 && (
             <div className="leaderboard">
-              <h2>
-                Classifica — {DIFFICULTY_LABEL[mode] ?? mode}
-              </h2>
+              <h2>{t("home.leaderboard")} — {t(`difficulty.${mode}`)}</h2>
               <ul>
                 {leaderboard.map((entry, i) => (
                   <li key={i}>
@@ -323,88 +137,34 @@ function Home({ resetTrigger }) {
         <div className="game-wrap">
           {board.length > 0 && !gameOver && !gameWon && (
             <div className="game-hud" aria-live="polite">
-              <span>
-                Tempo: <strong>{timer}s</strong>
-              </span>
-              <span>
-                Bandiere: <strong>
-                  {mines - flags}
-                </strong>{" "}
-                / {mines}
-              </span>
+              <span>{t("game.time")} <strong>{timer}s</strong></span>
+              <span>{t("game.flags")} <strong>{mines - flags}</strong> / {mines}</span>
             </div>
           )}
 
-          {board.length > 0 && (
-            <div className="game-board-outer">
-              <table className="game-table">
-                <tbody>
-                  {board.map((rowArray, rowIndex) => (
-                    <tr key={rowIndex}>
-                      {rowArray.map((cell, colIndex) => (
-                        <td
-                          key={colIndex}
-                          onContextMenu={(e) =>
-                            handleCellRightClick(rowIndex, colIndex, e)
-                          }
-                        >
-                          {cell === null ? (
-                            <button
-                              type="button"
-                              className="cell-btn"
-                              onClick={() => handleCellClick(rowIndex, colIndex)}
-                              style={{
-                                fontSize:
-                                  buttonText[rowIndex]?.[colIndex] === "🏴"
-                                    ? "0.65rem"
-                                    : undefined,
-                              }}
-                              disabled={
-                                gameOver ||
-                                gameWon ||
-                                !!buttonText[rowIndex]?.[colIndex]
-                              }
-                            >
-                              {buttonText[rowIndex]?.[colIndex] ?? ""}
-                            </button>
-                          ) : (
-                            <div
-                              className={`cell-revealed${
-                                cell > 0 && cell <= 8
-                                  ? ` cell-num--${cell}`
-                                  : ""
-                              }`}
-                            >
-                              {cell === -1 ? "💣" : cell === 0 ? "" : cell}
-                            </div>
-                          )}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <Board
+            grid={board}
+            buttonText={buttonText}
+            onCellClick={handleCellClick}
+            onCellRightClick={handleCellRightClick}
+            gameOver={gameOver}
+            gameWon={gameWon}
+          />
 
           {board.length > 0 && (gameOver || gameWon) && (
             <>
-              {gameOver && (
-                <p className="game-message game-message--lose" role="status">
-                  {message}
-                </p>
-              )}
-              {gameWon && (
-                <p className="game-message game-message--win" role="status">
-                  {message}
-                </p>
-              )}
+              <p
+                className={`game-message ${gameWon ? "game-message--win" : "game-message--lose"}`}
+                role="status"
+              >
+                {message}
+              </p>
               <button
                 type="button"
                 className="btn btn--secondary"
-                onClick={handleBack}
+                onClick={resetGame}
               >
-                Menu
+                {t("game.menu")}
               </button>
             </>
           )}

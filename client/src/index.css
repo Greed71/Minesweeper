@@ -387,6 +387,48 @@ p {
   font-weight: 500;
 }
 
+/* Language switcher */
+.lang-switcher {
+  display: flex;
+  gap: 2px;
+  margin-right: 0.35rem;
+  padding: 2px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+}
+
+.lang-btn {
+  padding: 0.3rem 0.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+
+.lang-btn:hover {
+  color: var(--text);
+  background: var(--bg-elevated);
+}
+
+.lang-btn--active {
+  color: #0a0c0e;
+  background: var(--accent);
+}
+
+.lang-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 .empty-state {
   text-align: center;
   padding: 3rem 1.5rem;

@@ -1,11 +1,35 @@
 services:
   - type: web
     name: minesweeper-backend
+    # env: docker → render usa SOLO il Dockerfile (build + run).
+    # buildCommand / startCommand sono ignorati in questa modalità → omessi.
     env: docker
     plan: free
     autoDeploy: true
+    branch: main        # esplicito: evita deploy dal branch sbagliato
     region: frankfurt
-    # env: docker → render usa SOLO il Dockerfile in server/Dockerfile
-    # (multi-stage: maven build → eclipse-temurin:21-jdk). buildCommand e
-    # startCommand sono ignorati in questa modalità, quindi vanno omessi
-    # per evitare confusione nei log di Render.
+    # repo ha client/ e server/: serve rootDir per trovare il Dockerfile
+    # e usare server/ come Docker build context (evita di copiare client/).
+    rootDir: server
+    # Health check pubblico: 120 hit/min (PingRateLimitFilter), nessun JWT.
+    healthCheckPath: /api/ping
+    # env vars richieste da application.properties. I segreti sono
+    # `sync: false` per restare fuori dal repo: sovrascrivili dalla
+    # Dashboard di Render dopo il primo Blueprint sync
+    # (SPRING_DATASOURCE_PASSWORD dal progetto Supabase,
+    #  JWT_SECRET rigenerato).
+    envVars:
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:postgresql://db.example.supabase.co:5432/postgres
+      - key: SPRING_DATASOURCE_USERNAME
+        value: postgres
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_ISSUER
+        value: minesweeper-api
+      - key: JWT_AUDIENCE
+        value: minesweeper-app
+      - key: FRONT
+        value: https://minesweeper-client.onrender.com

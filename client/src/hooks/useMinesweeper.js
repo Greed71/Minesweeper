@@ -57,10 +57,9 @@ export function useMinesweeper() {
       const isTop10 = currentLeaderboard.length < 10 ||
         time < (currentLeaderboard[currentLeaderboard.length - 1]?.points ?? Infinity);
       if (!isTop10) return;
-      if (!user) {
-        alert(t("game.loginToSave"));
-        return;
-      }
+      // Niente alert: salvataggio silente per i non loggati.
+      // Il bottone "Registrati" nella UI della vittoria copre il percorso di signup.
+      if (!user) return;
       const token = localStorage.getItem("token");
       await client.post(
         `${backendUrl}/score/save`,
@@ -134,16 +133,67 @@ export function useMinesweeper() {
 
   const toggleFlag = useCallback((rowIndex, colIndex) => {
     if (gameOver || gameWon) return;
-    const newButtonText = [...buttonText];
-    if (newButtonText[rowIndex]?.[colIndex] === "🏴") {
-      newButtonText[rowIndex][colIndex] = "";
-      setFlags((f) => f - 1);
-    } else if (flags < mines) {
-      newButtonText[rowIndex][colIndex] = "🏴";
+    // Deep copy a un livello: il pattern shallow `[...buttonText]` mutava
+    // le inner-array dello stato precedente (vedasi review precedente).
+    const newButtonText = buttonText.map((row) => [...row]);
+    const current = newButtonText[rowIndex]?.[colIndex] ?? "";
+
+    // Ciclo classico Minesweeper: vuoto → 🚩 → ? → vuoto.
+    let next;
+    if (current === "") {
+      if (flags >= mines) return; // limite mine raggiunto: non bandierare
+      next = "🏴";
       setFlags((f) => f + 1);
+    } else if (current === "🏴") {
+      next = "?";
+      setFlags((f) => f - 1); // '?' non conta come bandierina "salda"
+    } else {
+      // "?" → torna vuoto. Nessuna variazione sul contatore flags.
+      next = "";
     }
+
+    newButtonText[rowIndex][colIndex] = next;
     setButtonText(newButtonText);
   }, [buttonText, gameOver, gameWon, flags, mines]);
+
+  /** Chord-click: su una cella rivelata con valore N, se gli N vicini
+   *  bandierati (🚩) combaciano, rivela tutti i vicini non-bandierati.
+   *  Comportamento classico del Minesweeper desktop. */
+  const chordCell = useCallback(async (rowIndex, colIndex, user) => {
+    if (gameOver || gameWon) return;
+
+    const cellValue = board[rowIndex]?.[colIndex];
+    if (cellValue === null || cellValue === undefined || cellValue <= 0) return;
+
+    const rows = board.length;
+    const cols = board[0]?.length ?? 0;
+    if (!rows || !cols) return;
+
+    let flagCount = 0;
+    const toReveal = [];
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        if (dr === 0 && dc === 0) continue;
+        const nr = rowIndex + dr;
+        const nc = colIndex + dc;
+        if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+        const marker = buttonText[nr]?.[nc] ?? "";
+        if (marker === "🏴") {
+          flagCount++;
+        } else if (board[nr]?.[nc] === null && marker !== "🏴") {
+          // Non rivelata e non bandierata (può essere '?' o vuota): chord la rivela.
+          toReveal.push([nr, nc]);
+        }
+      }
+    }
+
+    if (flagCount !== cellValue) return; // il numero non combacia: niente chord
+
+    // Fire tutte le rivelazioni "in parallelo ma isolato": allSettled (non Promise.all)
+    // evita che un singolo errore di rete annulli le altre rivelazioni, perché la
+    // perdita di una cella su 8 è fastidiosa in un chord classico.
+    await Promise.allSettled(toReveal.map(([r, c]) => revealCell(r, c, user)));
+  }, [board, buttonText, gameOver, gameWon, revealCell]);
 
   const loadLeaderboard = useCallback(async (difficulty) => {
     try {
@@ -173,11 +223,18 @@ export function useMinesweeper() {
     stopTimer();
   }, [stopTimer]);
 
+  // Riprova con stessa difficoltà ma nuovo seed: nuovo sessionId → layout mine diverso sul server.
+  const restartWithFreshSeed = useCallback(async () => {
+    if (!row || !col || !mines) return;
+    sessionId.current = crypto.randomUUID();
+    await startGame(row, col, mines);
+  }, [row, col, mines, startGame]);
+
   return {
     board, gameOver, gameWon, gameStarted, timer, flags, message,
     buttonText, leaderboard, mode, row, col, mines, finalTime,
     setRow, setColumns, setMines, setMode,
-    startGame, revealCell, toggleFlag, resetGame, loadLeaderboard,
-    setLeaderboard,
+    startGame, revealCell, toggleFlag, chordCell,
+    resetGame, restartWithFreshSeed, loadLeaderboard, setLeaderboard,
   };
 }

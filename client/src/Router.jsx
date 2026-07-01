@@ -46,7 +46,11 @@ function AppShell() {
           onClick={() => setResetCounter((c) => c + 1)}
         >
           <span className="brand__mark" aria-hidden>
-            ⬚
+            <img
+              src="/mine.svg"
+              alt=""
+              className="brand__mark-img"
+            />
           </span>
           Minesweeper
         </Link>

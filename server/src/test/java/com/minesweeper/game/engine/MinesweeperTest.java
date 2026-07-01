@@ -66,4 +66,54 @@ class MinesweeperTest {
         g.revealCell(0, 0);
         assertNotEquals(0, g.countMinesOnBoard());
     }
+
+    /**
+     * Il primo click deve SEMPRE aprire più di una cella: la cella cliccata
+     * viene vincolata a valere 0, così il flood-fill rivela l'intera regione.
+     */
+    @Test
+    void firstClickOpensAtLeastTwoCells() {
+        Minesweeper g = new Minesweeper();
+        g.setRandomForTest(new Random(123L));
+        g.prepareEmptyBoard(8, 8, 10);
+        g.revealCell(4, 4);
+        assertFalse(g.isGameOver());
+
+        int revealed = 0;
+        Integer[][] visible = g.getVisibleBoard();
+        for (int r = 0; r < 8; r++) {
+            for (int c = 0; c < 8; c++) {
+                if (visible[r][c] != null) {
+                    revealed++;
+                }
+            }
+        }
+        // safeCell=0 ⇒ flood-fill ⇒ almeno la safe cell + i suoi vicini numerati (>=2).
+        assertTrue(revealed >= 2,
+            "Il primo click dovrebbe aprire più di una cella, ma ne ha aperte " + revealed);
+    }
+
+    /**
+     * Copertura anche su board "hard": density alta, primo click in un angolo.
+     * Vincolo safeCell=0 deve continuare a reggere.
+     */
+    @Test
+    void firstClickOnCornerOnHardBoardStillOpensArea() {
+        Minesweeper g = new Minesweeper();
+        g.setRandomForTest(new Random(98765L));
+        g.prepareEmptyBoard(16, 30, 99);
+        g.revealCell(0, 0);
+        assertFalse(g.isGameOver());
+
+        int revealed = 0;
+        Integer[][] visible = g.getVisibleBoard();
+        for (int r = 0; r < 16; r++) {
+            for (int c = 0; c < 30; c++) {
+                if (visible[r][c] != null) {
+                    revealed++;
+                }
+            }
+        }
+        assertTrue(revealed >= 2);
+    }
 }

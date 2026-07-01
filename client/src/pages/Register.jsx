@@ -21,7 +21,7 @@ function Register() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const disallowedChars = /[*'\"`;\\]/g;
+    const disallowedChars = /[*'"`;\\]/g;
     const sanitizedValue =
       name === "password" || name === "confirmPassword"
         ? value.replace(disallowedChars, "")

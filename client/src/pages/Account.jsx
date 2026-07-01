@@ -39,7 +39,9 @@ function Account() {
 
   const handleLogout = async () => {
     const token = localStorage.getItem("token");
-    const refreshToken = localStorage.getItem("refreshToken");
+    // Il backend revoca tutti i refresh token dell'utente lato DB quando riceve
+    // un POST /auth/logout con bearer valido (vedi AuthService.logout). Qui basta
+    // rimuoverli dal localStorage per evitare riusi dopo il re-login.
     if (token) {
       try {
         await client.post(`${backendUrl}/auth/logout`, null, {

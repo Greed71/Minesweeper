@@ -5,5 +5,7 @@ services:
     plan: free
     autoDeploy: true
     region: frankfurt
-    buildCommand: "./mvnw clean package -DskipTests"
-    startCommand: "java -jar app.jar"
+    # env: docker → render usa SOLO il Dockerfile in server/Dockerfile
+    # (multi-stage: maven build → eclipse-temurin:21-jdk). buildCommand e
+    # startCommand sono ignorati in questa modalità, quindi vanno omessi
+    # per evitare confusione nei log di Render.

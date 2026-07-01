@@ -17,8 +17,8 @@
   "game": {
     "time": "Tiempo:",
     "flags": "Banderas:",
-    "menu": "Menú",
-    "loginToSave": "Debes iniciar sesión o registrarte para guardar la puntuación.",
+    "menu": "Salir",
+    "retry": "Reintentar",
     "serverUnreachable": "Servidor no accesible. Inicia Spring en el puerto 8080 (en la raíz: npm run dev) o verifica VITE_APP_BACKEND_URL.",
     "gameStartError": "La partida no comenzó, verifica la conexión.",
     "moveError": "Este movimiento no funcionó, inténtalo de nuevo.",

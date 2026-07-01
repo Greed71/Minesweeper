@@ -21,6 +21,10 @@
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.6rem;
+  /* Stesso principio di .post-game-actions--win: il blocco è centrato in
+     .home__pre (align-items center) ma viene spostato "un pelo" a destra
+     per assecondare la preferenza UX (percezione di centratura vs board). */
+  margin-left: 0.4rem;
 }
 
 .mode-pill {
@@ -175,38 +179,46 @@
   background: var(--border);
   border-radius: var(--radius-sm);
   margin: 0 auto;
+  /* table-layout: fixed blocca la width del <td> in 30px anche quando
+     il contenuto cambia (cella scoperta con numero/emoji) */
+  table-layout: fixed;
 }
 
 .game-table td {
+  /* Dimensioni STRETTE per le tre varianti (coperta / scoperta / bandierina):
+     pinned a 30×30 dal `table-layout: fixed` e dalla width/height esplicite. */
   width: 30px;
   height: 30px;
   padding: 0;
   text-align: center;
   vertical-align: middle;
   background: var(--bg);
+  box-sizing: border-box;
+  line-height: 30px;
 }
 
 .cell-btn {
   width: 100%;
   height: 100%;
-  min-width: 28px;
-  min-height: 28px;
   padding: 0;
   margin: 0;
   background: linear-gradient(180deg, #3a3f4d 0%, #2a2f3a 100%);
   background-color: #2e343f;
   border: none;
   border-radius: 2px;
-  font-size: 0.7rem;
+  font-size: 0.95rem;
   line-height: 1;
   cursor: pointer;
   color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  overflow: hidden;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
     0 1px 0 rgba(0, 0, 0, 0.35);
-  transition:
-    background 0.1s,
-    transform 0.05s;
+  transition: background 0.1s;
 }
 
 @media (prefers-color-scheme: light) {
@@ -224,7 +236,18 @@
 }
 
 .cell-btn:active:not(:disabled) {
-  transform: scale(0.97);
+  /* VIETATO applicare `transform` qui sotto (scale, translate, …):
+     ridurre la bounding-box tra mousedown e mouseup scarica il click
+     sull'elemento padre (td) e l'evento `click` non viene mai emesso.
+     Usare solo modificatori non-layout (filter, background, inset shadow). */
+  filter: brightness(0.92);
+}
+
+.cell-btn:focus-visible {
+  /* Outline interno (offset negativo) per restare dentro i 30×30 della cella
+     e non sformare il border-spacing della tabella. */
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 
 .cell-btn:disabled {
@@ -239,14 +262,15 @@
   justify-content: center;
   width: 100%;
   height: 100%;
-  min-height: 28px;
   background: #e8eaef;
   color: #1a1a1a;
   font-family: var(--font-mono);
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 600;
   line-height: 1;
   border-radius: 2px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 @media (prefers-color-scheme: light) {
@@ -302,4 +326,18 @@
   color: var(--danger);
   background: color-mix(in srgb, var(--danger) 10%, transparent);
   border: 1px solid color-mix(in srgb, var(--danger) 22%, transparent);
+}
+
+/* Bottoni dopo vittoria/sconfitta: layout orizzontale con gap uniforme */
+.post-game-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+/* Sulla vittoria (3 bottoni) il blocco viene spostato "un pelo" a destra
+   per assecondare la preferenza UX (percezione di centratura vs board). */
+.post-game-actions--win {
+  margin-left: 2.6rem;
 }

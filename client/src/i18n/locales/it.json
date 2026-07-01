@@ -17,8 +17,8 @@
   "game": {
     "time": "Tempo:",
     "flags": "Bandiere:",
-    "menu": "Menu",
-    "loginToSave": "Devi effettuare l'accesso o registrarti per salvare il punteggio.",
+    "menu": "Esci",
+    "retry": "Riprova",
     "serverUnreachable": "Server non raggiungibile. Avvia Spring su porta 8080 (nella root: npm run dev) oppure controlla VITE_APP_BACKEND_URL.",
     "gameStartError": "Non è partita la partita, controlla la connessione.",
     "moveError": "Questa mossa non è passata, riprova.",

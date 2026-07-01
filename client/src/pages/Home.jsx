@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import client from "../api/client.js";
 import { devWarn } from "../devLog.js";
 import { getBackendUrl } from "../config.js";
@@ -24,7 +25,8 @@ function Home({ resetTrigger }) {
     board, gameOver, gameWon, gameStarted, timer, flags, message,
     buttonText, leaderboard, mode, row, col, mines,
     setRow, setColumns, setMines, setMode,
-    startGame, revealCell, toggleFlag, resetGame, loadLeaderboard,
+    startGame, revealCell, toggleFlag, chordCell, resetGame,
+    restartWithFreshSeed, loadLeaderboard,
   } = useMinesweeper();
 
   // Ping keep-alive
@@ -40,12 +42,12 @@ function Home({ resetTrigger }) {
   // Reset quando il trigger cambia (click logo)
   useEffect(() => {
     resetGame();
-  }, [resetTrigger]);
+  }, [resetTrigger, resetGame]);
 
   // Carica leaderboard quando cambia la difficoltà
   useEffect(() => {
     if (mode) loadLeaderboard(mode);
-  }, [mode]);
+  }, [mode, loadLeaderboard]);
 
   // Carica utente loggato
   useEffect(() => {
@@ -70,7 +72,7 @@ function Home({ resetTrigger }) {
     } else {
       setUser(null);
     }
-  }, []);
+  }, [backendUrl]);
 
   /** Strategy: seleziona difficoltà dalla mappa di configurazione. */
   const handleModeSelect = (modeKey) => {
@@ -85,6 +87,10 @@ function Home({ resetTrigger }) {
   const handleCellClick = (r, c) => revealCell(r, c, user);
 
   const handleCellRightClick = (r, c) => toggleFlag(r, c);
+
+  // Chord-click su una cella rivelata: rivela i vicini non-bandierati
+  // quando il numero combacia col numero di bandierine adiacenti.
+  const handleCellDoubleClick = (r, c) => chordCell(r, c, user);
 
   return (
     <main className="page home">
@@ -147,6 +153,7 @@ function Home({ resetTrigger }) {
             buttonText={buttonText}
             onCellClick={handleCellClick}
             onCellRightClick={handleCellRightClick}
+            onCellDoubleClick={handleCellDoubleClick}
             gameOver={gameOver}
             gameWon={gameWon}
           />
@@ -159,13 +166,29 @@ function Home({ resetTrigger }) {
               >
                 {message}
               </p>
-              <button
-                type="button"
-                className="btn btn--secondary"
-                onClick={resetGame}
-              >
-                {t("game.menu")}
-              </button>
+              {/* Vittoria: Esci / Riprova (nuovo seed) / Registrati (solo non loggato).
+                  Sconfitta: Esci + Riprova (stesso seed nuovo). */}
+              <div className={`post-game-actions${gameWon ? " post-game-actions--win" : ""}`}>
+                <button
+                  type="button"
+                  className="btn btn--secondary"
+                  onClick={resetGame}
+                >
+                  {t("game.menu")}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--primary"
+                  onClick={restartWithFreshSeed}
+                >
+                  {t("game.retry")}
+                </button>
+                {gameWon && !user && (
+                  <Link to="/register" className="btn btn--secondary">
+                    {t("auth.registerButton")}
+                  </Link>
+                )}
+              </div>
             </>
           )}
         </div>

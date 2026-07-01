@@ -148,17 +148,37 @@ public class Minesweeper {
         }
     }
 
+    /**
+     * Posiziona mine e numeri garantendo che il PRIMO click dell'utente apra sempre
+     * più di una cella. Regole in ordine:
+     *   1. La cella su cui si clicca non deve contenere una mina.
+     *   2. Deve valere 0 (zero mine adiacenti): il flood-fill in revealCell
+     *      parte solo da celle 0 e rivela l'intera regione connessa, garantendo
+     *      UX soddisfacente (primo click sempre esplosivo invece di una singola '1').
+     * Su board patologicamente piccole/dense (es. 2x2 con 1 mine: nessuna cella 0
+     * può esistere) si fa fallback all'ultimo tentativo che ha safeCell != -1.
+     */
     private boolean placeMinesAndNumbers(int safeRow, int safeCol) {
         int maxAttempts = 100;
         for (int attempt = 0; attempt < maxAttempts; attempt++) {
             initializeBoard();
             placeMines(safeRow, safeCol);
             calculateNumbers();
-            if (board[safeRow][safeCol] != -1) {
-                return true;
+            int safeCell = board[safeRow][safeCol];
+            if (safeCell == -1) {
+                continue; // safe cell è una mina: riprova
             }
+            if (safeCell == 0) {
+                return true; // safe cell è una '0': il flood-fill rivelerà la regione
+            }
+            // safeCell è 1..8: riprova finché non cade su uno zero.
         }
-        return false;
+        log.warn(
+            "placeMinesAndNumbers: impossibile trovare safeCell=0 dopo {} tentativi ({}x{}, mine={}). "
+            + "Fallback: il primo click aprirà una sola cella.",
+            maxAttempts, rows, cols, mineCount
+        );
+        return true; // fallback: l'ultimo tentativo aveva safeCell = numero, non mina
     }
 
     private void calculateNumbers() {

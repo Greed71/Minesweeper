@@ -17,8 +17,8 @@
   "game": {
     "time": "Temps :",
     "flags": "Drapeaux :",
-    "menu": "Menu",
-    "loginToSave": "Vous devez vous connecter ou vous inscrire pour sauvegarder le score.",
+    "menu": "Quitter",
+    "retry": "Rejouer",
     "serverUnreachable": "Serveur inaccessible. Démarrez Spring sur le port 8080 (dans la racine : npm run dev) ou vérifiez VITE_APP_BACKEND_URL.",
     "gameStartError": "La partie n'a pas démarré, vérifiez la connexion.",
     "moveError": "Ce coup n'a pas fonctionné, réessayez.",

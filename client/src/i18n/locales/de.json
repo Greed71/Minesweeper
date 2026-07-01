@@ -17,8 +17,8 @@
   "game": {
     "time": "Zeit:",
     "flags": "Flaggen:",
-    "menu": "Menü",
-    "loginToSave": "Du musst dich anmelden oder registrieren, um die Punktzahl zu speichern.",
+    "menu": "Beenden",
+    "retry": "Wiederholen",
     "serverUnreachable": "Server nicht erreichbar. Starte Spring auf Port 8080 (im Root: npm run dev) oder prüfe VITE_APP_BACKEND_URL.",
     "gameStartError": "Das Spiel konnte nicht gestartet werden, überprüfe die Verbindung.",
     "moveError": "Dieser Zug hat nicht funktioniert, versuche es erneut.",

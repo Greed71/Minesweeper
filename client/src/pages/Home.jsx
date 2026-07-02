@@ -24,9 +24,10 @@ function Home({ resetTrigger }) {
   const {
     board, gameOver, gameWon, gameStarted, timer, flags, message,
     buttonText, leaderboard, mode, row, col, mines,
+    pendingScore,
     setRow, setColumns, setMines, setMode,
     startGame, revealCell, toggleFlag, chordCell, resetGame,
-    restartWithFreshSeed, loadLeaderboard,
+    restartWithFreshSeed, loadLeaderboard, claimPendingScore,
   } = useMinesweeper();
 
   // Ping keep-alive
@@ -48,6 +49,27 @@ function Home({ resetTrigger }) {
   useEffect(() => {
     if (mode) loadLeaderboard(mode);
   }, [mode, loadLeaderboard]);
+
+  // Auto-claim: se c'è un punteggio parcheggiato (vinto da guest) e
+  // abbiamo un utente loggato, mandalo al backend. Si triggera su:
+  //   1. Mount (utente già loggato da localStorage, c'è pendingScore).
+  //   2. Login completato (user passa da null a {...}).
+  //   3. Registrazione completata (idem).
+  //   4. Vittoria da guest seguita immediatamente da login (improbabile
+  //      ma harmless: claimPendingScore è idempotente lato server grazie
+  //      al timestamp finishedAt).
+  // ⚠️ GUARD RICHIESTO (vedi commento dentro useMinesweeper.js):
+  // Il guard `if (user && pendingScore)` È INDISPENSABILE perché
+  // claimPendingScore è un useCallback che cambia reference quando
+  // pendingScore o mode cambiano. Dopo un claim riuscito,
+  // setPendingScore(null) cambia la reference di claimPendingScore
+  // → questo useEffect si ri-firebbe → loop infinito.
+  // NON rimuovere il guard senza protezione equivalente.
+  useEffect(() => {
+    if (user && pendingScore) {
+      claimPendingScore(user);
+    }
+  }, [user, pendingScore, claimPendingScore]);
 
   // Carica utente loggato
   useEffect(() => {

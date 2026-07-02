@@ -174,25 +174,31 @@
 }
 
 .game-table {
-  border-collapse: separate;
-  border-spacing: 1px;
-  background: var(--border);
-  border-radius: var(--radius-sm);
+  /* border-collapse: collapse invece di separate+1px-spaced.
+     Motivazione vedi sotto in .game-table td. */
+  border-collapse: collapse;
+  border-spacing: 0;
   margin: 0 auto;
-  /* table-layout: fixed blocca la width del <td> in 30px anche quando
+  /* table-layout: fixed blocca la width del <td> in 32px anche quando
      il contenuto cambia (cella scoperta con numero/emoji) */
   table-layout: fixed;
 }
 
 .game-table td {
   /* Dimensioni STRETTE per le tre varianti (coperta / scoperta / bandierina):
-     pinned a 30×30 dal `table-layout: fixed` e dalla width/height esplicite. */
-  width: 30px;
-  height: 30px;
+     - Outer 32×32 (1px border-collapse border su ogni lato).
+     - Inner 30×30 (content area per il .cell-btn / .cell-revealed).
+     Il border-collapse KILLA il "dead zone" di 1px che `border-spacing: 1px`
+     lasciava tra le celle (clicks che cadevano sul `<table>` non triggera
+     nessun onClick). Il listener è ora sul `<td>` (vedi Cell.jsx). */
+  width: 32px;
+  height: 32px;
   padding: 0;
+  margin: 0;
   text-align: center;
   vertical-align: middle;
-  background: var(--bg);
+  background: transparent;
+  border: 1px solid var(--border);
   box-sizing: border-box;
   line-height: 30px;
 }
@@ -213,8 +219,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* RIMOSSO `overflow: hidden`: in alcuni browser (Safari/WebKit mobile)
+     `overflow: hidden` su un <button> causa hit-test subpixel in cui un
+     mousedown a 1-2px dal bordo viene perso. Senza overflow il box-shadow
+     sollevato può uscire di un px dal button ma sullo stesso <td>, quindi
+     non visibile né rilevante. */
   box-sizing: border-box;
-  overflow: hidden;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.12),
     0 1px 0 rgba(0, 0, 0, 0.35);

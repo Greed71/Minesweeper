@@ -185,13 +185,16 @@
 }
 
 .game-table td {
-  /* Dimensioni STRETTE per le tre varianti (coperta / scoperta / bandierina):
-     - Outer 32×32 (1px border-collapse border su ogni lato).
-     - Inner 30×30 (content area per il .cell-btn / .cell-revealed).
-     Il border-collapse KILLA il "dead zone" di 1px che `border-spacing: 1px`
-     lasciava tra le celle (clicks che cadevano sul `<table>` non triggera
-     nessun onClick). Il listener è ora sul `<td>` (vedi Cell.jsx). */
+  /* Dimensioni FISSE per le tre varianti (coperta / scoperta / bandierina):
+     - Outer 32×32 (1px border-collapse border su ogni lato) → 30×30 inner.
+     - Il border-collapse KILLA il "dead zone" di 1px.
+     - table-layout: fixed fissa le larghezze colonna, MA le altezze riga
+       sono comunque auto-size dal browser in base al contenuto. Per questo
+       servono overflow:hidden + line-height:1 + max-width per blindare
+       ogni cella a 32×32 esatti, altrimenti emoji (🏴, 💣) e numeri
+       deformano il campo durante il gioco. */
   width: 32px;
+  max-width: 32px;
   height: 32px;
   padding: 0;
   margin: 0;
@@ -200,7 +203,8 @@
   background: transparent;
   border: 1px solid var(--border);
   box-sizing: border-box;
-  line-height: 30px;
+  line-height: 1;
+  overflow: hidden;
 }
 
 .cell-btn {
@@ -350,4 +354,13 @@
    per assecondare la preferenza UX (percezione di centratura vs board). */
 .post-game-actions--win {
   margin-left: 2.6rem;
+}
+
+/* Leaderboard empty state */
+.leaderboard__empty {
+  margin: 0;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--text-faint);
+  text-align: center;
 }

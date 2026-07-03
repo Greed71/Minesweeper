@@ -12,7 +12,8 @@
     "heroTitle": "Pronti a giocare?",
     "heroSubtitle": "Scegli la difficoltà, controlla la classifica, poi inizia la partita.",
     "play": "Gioca",
-    "leaderboard": "Classifica"
+    "leaderboard": "Classifica",
+    "noScores": "Nessun punteggio ancora — sii il primo!"
   },
   "game": {
     "time": "Tempo:",
@@ -51,6 +52,7 @@
     "email": "Email",
     "username": "Username",
     "records": "I tuoi record",
+    "noScores": "Nessun punteggio ancora. Gioca per comparire qui!",
     "changePassword": "Cambia password",
     "close": "Chiudi",
     "currentPassword": "Password attuale",

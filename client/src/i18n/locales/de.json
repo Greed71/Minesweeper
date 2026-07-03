@@ -12,7 +12,8 @@
     "heroTitle": "Bereit zum Spielen?",
     "heroSubtitle": "Wähle den Schwierigkeitsgrad, sieh dir die Rangliste an und starte das Spiel.",
     "play": "Spielen",
-    "leaderboard": "Rangliste"
+    "leaderboard": "Rangliste",
+    "noScores": "Noch keine Punktzahlen — sei der Erste!"
   },
   "game": {
     "time": "Zeit:",
@@ -51,6 +52,7 @@
     "email": "E-Mail",
     "username": "Benutzername",
     "records": "Deine Rekorde",
+    "noScores": "Noch keine Punktzahlen. Spiel, um hier zu erscheinen!",
     "changePassword": "Passwort ändern",
     "close": "Schließen",
     "currentPassword": "Aktuelles Passwort",

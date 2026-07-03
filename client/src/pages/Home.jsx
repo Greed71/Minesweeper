@@ -145,17 +145,21 @@ function Home({ resetTrigger }) {
             {t("home.play")}
           </button>
 
-          {mode && leaderboard.length > 0 && (
+          {mode && (
             <div className="leaderboard">
               <h2>{t("home.leaderboard")} — {t(`difficulty.${mode}`)}</h2>
-              <ul>
-                {leaderboard.map((entry, i) => (
-                  <li key={i}>
-                    <span className="name">{entry.user.username}</span>
-                    <span className="pts">{entry.points}s</span>
-                  </li>
-                ))}
-              </ul>
+              {leaderboard.length > 0 ? (
+                <ul>
+                  {leaderboard.map((entry, i) => (
+                    <li key={i}>
+                      <span className="name">{entry.user.username}</span>
+                      <span className="pts">{entry.points}s</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="leaderboard__empty">{t("home.noScores")}</p>
+              )}
             </div>
           )}
         </div>

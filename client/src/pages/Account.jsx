@@ -113,9 +113,9 @@ function Account() {
           </p>
         </div>
 
-        {scores.length > 0 && (
-          <div className="leaderboard" style={{ marginTop: "0.5rem" }}>
-            <h2>{t("account.records")}</h2>
+        <div className="leaderboard" style={{ marginTop: "0.5rem" }}>
+          <h2>{t("account.records")}</h2>
+          {scores.length > 0 ? (
             <ul>
               {scores.map((s) => (
                 <li key={s.id ?? `${s.difficulty}-${s.points}`}>
@@ -124,8 +124,10 @@ function Account() {
                 </li>
               ))}
             </ul>
-          </div>
-        )}
+          ) : (
+            <p className="leaderboard__empty">{t("account.noScores")}</p>
+          )}
+        </div>
 
         <div
           className="form-stack"

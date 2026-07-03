@@ -98,6 +98,15 @@ export function useMinesweeper() {
     }
   }, [backendUrl, leaderboard, mode, t]);
 
+  const loadLeaderboard = useCallback(async (difficulty) => {
+    try {
+      const res = await client.get(`${backendUrl}/score/leaderboard?difficulty=${difficulty}`);
+      setLeaderboard(res.data);
+    } catch (err) {
+      devWarn(t("game.leaderboardError"), err);
+    }
+  }, [backendUrl, t]);
+
   /** Claim un punteggio parcheggiato (parked come guest) dopo che
    *  l'utente si è loggato/registrato. Sicuro da chiamare + volte: se
    *  `pendingScore` è null o l'utente non c'è, è un no-op.
@@ -250,15 +259,6 @@ export function useMinesweeper() {
     // perdita di una cella su 8 è fastidiosa in un chord classico.
     await Promise.allSettled(toReveal.map(([r, c]) => revealCell(r, c, user)));
   }, [board, buttonText, gameOver, gameWon, revealCell]);
-
-  const loadLeaderboard = useCallback(async (difficulty) => {
-    try {
-      const res = await client.get(`${backendUrl}/score/leaderboard?difficulty=${difficulty}`);
-      setLeaderboard(res.data);
-    } catch (err) {
-      devWarn(t("game.leaderboardError"), err);
-    }
-  }, [backendUrl, t]);
 
   const resetGame = useCallback(() => {
     setGameStarted(false);

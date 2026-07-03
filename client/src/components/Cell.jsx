@@ -85,7 +85,7 @@ function Cell({
       onContextMenu={(e) => {
         e.preventDefault();
         e.stopPropagation();
-        onRightClick?.();
+        onRightClick?.(e);
       }}
     >
       <button

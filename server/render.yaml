@@ -33,3 +33,10 @@ services:
         value: minesweeper-app
       - key: FRONT
         value: https://minesweeper-client.onrender.com
+      - key: PING_BYPASS_TOKEN
+        # sync: false → segreto fuori dal repo, da generare una volta e
+        # incollare nella Dashboard Render (Settings → Environment).
+        # Il cron job deve includerlo come header X-Ping-Token (o fallback ?token=)
+        # per non essere bloccato dal PingRateLimitFilter (Render collassa
+        # tutto il traffico sotto il proxy egress → bucket IP condiviso).
+        sync: false

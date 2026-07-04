@@ -11,6 +11,7 @@ import com.minesweeper.game.repository.GameSessionRepository;
 import java.time.Duration;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
  * Disaccoppiato dall'implementazione concreta (RAM, Redis, DB).
  */
 @Service
+@Lazy(false) // eagerly initialized: @Scheduled deve partire anche con lazy-initialization globale
 public class GameSessionService {
 
     private final GameSessionRepository repository;
